@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30621.155
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dense", "Dense.vcxproj", "{5E46F589-DD4C-40F2-96AD-C9492A7A5523}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Debug|x64.ActiveCfg = Debug|x64
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Debug|x64.Build.0 = Debug|x64
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Debug|x86.ActiveCfg = Debug|Win32
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Debug|x86.Build.0 = Debug|Win32
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Release|x64.ActiveCfg = Release|x64
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Release|x64.Build.0 = Release|x64
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Release|x86.ActiveCfg = Release|Win32
+		{5E46F589-DD4C-40F2-96AD-C9492A7A5523}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5878C5D1-B9D7-4CF8-B30D-FC2D2DC026E9}
+	EndGlobalSection
+EndGlobal
