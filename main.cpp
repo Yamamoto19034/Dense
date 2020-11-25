@@ -17,11 +17,26 @@
 //マウスのボタン
 #define MOUSE_BUTTON_CODE	129
 
+//パスの長さ
+#define PATH_MAX				255
+
+//エラーメッセージ
+#define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
+
+//音楽のパス
+#define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")
+
 enum GAME_SCENE {
 	GAME_SCENE_START,
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
 };  //ゲームのシーン
+
+typedef struct STRUCT_MUSIC
+{
+	char path[PATH_MAX];	//パス
+	int handle;				//ハンドル
+}MUSIC;  //音楽構造体
 
 //######グローバル変数######
 int StartTimeFps;					//測定開始時刻
@@ -34,6 +49,9 @@ char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
 
 int GameScene;					//ゲームシーンを管理
+
+//音楽関連
+MUSIC START_BGM;
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);			//FPS値を計測、更新する
@@ -55,6 +73,9 @@ VOID MY_END(VOID);					//エンド画面
 VOID MY_END_PROC(VOID);				//エンド画面の処理
 VOID MY_END_DRAW(VOID);				//エンド画面の描画
 
+BOOL MY_LOAD_MUSIC(VOID);			//音楽をまとめて読み込む関数
+VOID MY_DELETE_MUSIC(VOID);			//音楽をまとめて削除する関数
+
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -65,6 +86,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetAlwaysRunFlag(TRUE);						//非アクティブでも実行する
 
 	if (DxLib_Init() == -1) { return -1; }	//ＤＸライブラリ初期化処理
+
+	//音楽を読み込む
+	if (MY_LOAD_MUSIC() == FALSE) { return -1; }
 
 	int DrawX = 0;	//表示位置X
 	int DrawY = 0;	//表示位置Y
@@ -103,6 +127,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		MY_FPS_WAIT();							//FPSの処理(待つ)
 	}
+
+	MY_DELETE_MUSIC();
 
 	DxLib_End();	//ＤＸライブラリ使用の終了処理
 
@@ -207,7 +233,24 @@ VOID MY_START_PROC(VOID)
 	//エンターキー押したら、プレイシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_RETURN) == TRUE)
 	{
+		//BGMが流れているなら
+		if (CheckSoundMem(START_BGM.handle) != 0)
+		{
+			StopSoundMem(START_BGM.handle);  //BGMを止める
+		}
+
+		//プレイシーンへ移動する
 		GameScene = GAME_SCENE_PLAY;
+
+		return;  //強制的にプレイシーンへ移動する
+	}
+
+	//BGMが流れていないなら
+	if (CheckSoundMem(START_BGM.handle) == 0)
+	{
+		//BGMの音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, START_BGM.handle);  //50%の音量にする
+		PlaySoundMem(START_BGM.handle, DX_PLAYTYPE_LOOP);
 	}
 
 	return;
@@ -278,6 +321,30 @@ VOID MY_END_DRAW(VOID)
 {
 	DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
 	DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
+
+	return;
+}
+
+//音楽をまとめて読み込む関数
+BOOL MY_LOAD_MUSIC(VOID)
+{
+	//スタート画面の背景音楽
+	strcpy_s(START_BGM.path, MUSIC_START_BGM_PATH);
+	START_BGM.handle = LoadSoundMem(START_BGM.path);
+	if (START_BGM.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), MUSIC_START_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+//音楽をまとめて削除する関数
+VOID MY_DELETE_MUSIC(VOID)
+{
+	DeleteSoundMem(START_BGM.handle);
 
 	return;
 }
