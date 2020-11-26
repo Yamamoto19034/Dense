@@ -21,6 +21,13 @@
 #define PATH_MAX				255
 
 //エラーメッセージ
+#define IMAGE_LOAD_ERR_TITLE	TEXT("画像読み込みエラー")
+
+//画像のパス
+#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BK_start.png")
+#define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")
+
+//エラーメッセージ
 #define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
 
 //音楽のパス
@@ -31,6 +38,16 @@ enum GAME_SCENE {
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
 };  //ゲームのシーン
+
+typedef struct STRUCT_IMAGE
+{
+	char path[PATH_MAX];	//パス
+	int handle;				//ハンドル
+	int x;					//X位置
+	int y;					//Y位置
+	int width;				//幅
+	int height;				//高さ
+}IMAGE;  //画像構造体
 
 typedef struct STRUCT_MUSIC
 {
@@ -49,6 +66,10 @@ char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
 
 int GameScene;					//ゲームシーンを管理
+
+//画像関連
+IMAGE ImageStartBG;				//スタート画面の背景
+IMAGE ImageTitle;				//タイトルロゴ
 
 //音楽関連
 MUSIC START_BGM;
@@ -73,6 +94,9 @@ VOID MY_END(VOID);					//エンド画面
 VOID MY_END_PROC(VOID);				//エンド画面の処理
 VOID MY_END_DRAW(VOID);				//エンド画面の描画
 
+BOOL MY_LOAD_IMAGE(VOID);			//画像をまとめて読み込む関数
+VOID MY_DELETE_IMAGE(VOID);			//画像をまとめて削除する関数
+
 BOOL MY_LOAD_MUSIC(VOID);			//音楽をまとめて読み込む関数
 VOID MY_DELETE_MUSIC(VOID);			//音楽をまとめて削除する関数
 
@@ -86,6 +110,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetAlwaysRunFlag(TRUE);						//非アクティブでも実行する
 
 	if (DxLib_Init() == -1) { return -1; }	//ＤＸライブラリ初期化処理
+
+	//画像を読み込む
+	if (MY_LOAD_IMAGE() == FALSE) { return -1; }
 
 	//音楽を読み込む
 	if (MY_LOAD_MUSIC() == FALSE) { return -1; }
@@ -128,6 +155,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MY_FPS_WAIT();							//FPSの処理(待つ)
 	}
 
+	//画像ハンドルを破棄
+	MY_DELETE_IMAGE();
+
+	//音楽ハンドルを破棄
 	MY_DELETE_MUSIC();
 
 	DxLib_End();	//ＤＸライブラリ使用の終了処理
@@ -259,7 +290,9 @@ VOID MY_START_PROC(VOID)
 //スタート画面の描画
 VOID MY_START_DRAW(VOID)
 {
-	DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(255, 0, 0), TRUE);
+	//背景・タイトルを描画
+	DrawGraph(ImageStartBG.x, ImageStartBG.y, ImageStartBG.handle, TRUE);
+	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
 	DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
 
 	return;
@@ -321,6 +354,47 @@ VOID MY_END_DRAW(VOID)
 {
 	DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
 	DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
+
+	return;
+}
+
+//画像をまとめて読み込む関数
+BOOL MY_LOAD_IMAGE(VOID)
+{
+	//スタート画面の背景画像
+	strcpy_s(ImageStartBG.path, IMAGE_START_BG_PATH);		//パスの設定
+	ImageStartBG.handle = LoadGraph(ImageStartBG.path);		//読み込み
+	if (ImageStartBG.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_START_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageStartBG.handle, &ImageStartBG.width, &ImageStartBG.height);	//画像の幅と高さを取得
+	ImageStartBG.x = GAME_WIDTH / 2 - ImageStartBG.width / 2;		//X位置を決める
+	ImageStartBG.y = GAME_HEIGHT / 2 - ImageStartBG.height / 2;		//Y位置を決める
+
+	//タイトルロゴ画像
+	strcpy_s(ImageTitle.path, IMAGE_TITLE_PATH);		//パスの設定
+	ImageTitle.handle = LoadGraph(ImageTitle.path);		//読み込み
+	if (ImageTitle.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_TITLE_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
+	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;			//Y位置を決める
+
+	return TRUE;
+}
+
+//画像をまとめて削除する関数
+VOID MY_DELETE_IMAGE(VOID)
+{
+	DeleteGraph(ImageStartBG.handle);
+	DeleteGraph(ImageTitle.handle);
 
 	return;
 }
