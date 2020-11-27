@@ -24,7 +24,7 @@
 #define IMAGE_LOAD_ERR_TITLE	TEXT("画像読み込みエラー")
 
 //画像のパス
-#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BK_start.png")
+#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BG_start.png")
 #define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")
 
 //エラーメッセージ
@@ -32,6 +32,7 @@
 
 //音楽のパス
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")
+#define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")
 
 enum GAME_SCENE {
 	GAME_SCENE_START,
@@ -72,7 +73,8 @@ IMAGE ImageStartBG;				//スタート画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 
 //音楽関連
-MUSIC START_BGM;
+MUSIC Start_BGM;
+MUSIC Play_BGM;
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);			//FPS値を計測、更新する
@@ -265,9 +267,9 @@ VOID MY_START_PROC(VOID)
 	if (MY_KEY_DOWN(KEY_INPUT_RETURN) == TRUE)
 	{
 		//BGMが流れているなら
-		if (CheckSoundMem(START_BGM.handle) != 0)
+		if (CheckSoundMem(Start_BGM.handle) != 0)
 		{
-			StopSoundMem(START_BGM.handle);  //BGMを止める
+			StopSoundMem(Start_BGM.handle);  //BGMを止める
 		}
 
 		//プレイシーンへ移動する
@@ -277,11 +279,11 @@ VOID MY_START_PROC(VOID)
 	}
 
 	//BGMが流れていないなら
-	if (CheckSoundMem(START_BGM.handle) == 0)
+	if (CheckSoundMem(Start_BGM.handle) == 0)
 	{
 		//BGMの音量を下げる
-		ChangeVolumeSoundMem(255 * 50 / 100, START_BGM.handle);  //50%の音量にする
-		PlaySoundMem(START_BGM.handle, DX_PLAYTYPE_LOOP);
+		ChangeVolumeSoundMem(255 * 50 / 100, Start_BGM.handle);  //50%の音量にする
+		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);
 	}
 
 	return;
@@ -313,7 +315,24 @@ VOID MY_PLAY_PROC(VOID)
 	//スペースキー押したら、エンドシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_SPACE) == TRUE)
 	{
+		//BGMが流れているなら
+		if (CheckSoundMem(Play_BGM.handle) != 0)
+		{
+			StopSoundMem(Play_BGM.handle);  //BGMを止める
+		}
+
+		//エンドシーンへ移動する
 		GameScene = GAME_SCENE_END;
+
+		return;  //強制的にエンドシーンへ移動する
+	}
+
+	//BGMが流れていないなら
+	if (CheckSoundMem(Play_BGM.handle) == 0)
+	{
+		//BGMの音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Play_BGM.handle);  //50%の音量にする
+		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);
 	}
 
 	return;
@@ -403,12 +422,22 @@ VOID MY_DELETE_IMAGE(VOID)
 BOOL MY_LOAD_MUSIC(VOID)
 {
 	//スタート画面の背景音楽
-	strcpy_s(START_BGM.path, MUSIC_START_BGM_PATH);
-	START_BGM.handle = LoadSoundMem(START_BGM.path);
-	if (START_BGM.handle == -1)
+	strcpy_s(Start_BGM.path, MUSIC_START_BGM_PATH);
+	Start_BGM.handle = LoadSoundMem(Start_BGM.path);
+	if (Start_BGM.handle == -1)
 	{
 		//エラーメッセージ表示
 		MessageBox(GetMainWindowHandle(), MUSIC_START_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	//プレイ画面の背景音楽
+	strcpy_s(Play_BGM.path, MUSIC_PLAY_BGM_PATH);
+	Play_BGM.handle = LoadSoundMem(Play_BGM.path);
+	if (Play_BGM.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), MUSIC_PLAY_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
 		return FALSE;
 	}
 
@@ -418,7 +447,8 @@ BOOL MY_LOAD_MUSIC(VOID)
 //音楽をまとめて削除する関数
 VOID MY_DELETE_MUSIC(VOID)
 {
-	DeleteSoundMem(START_BGM.handle);
+	DeleteSoundMem(Start_BGM.handle);
+	DeleteSoundMem(Play_BGM.handle);
 
 	return;
 }
