@@ -24,15 +24,16 @@
 #define IMAGE_LOAD_ERR_TITLE	TEXT("画像読み込みエラー")
 
 //画像のパス
-#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BG_start.png")
-#define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")
+#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BG_start.png")			//スタート画面の背景
+#define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")				//タイトルロゴ
+#define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 
 //エラーメッセージ
 #define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
 
 //音楽のパス
-#define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")
-#define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")
+#define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
+#define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
 
 enum GAME_SCENE {
 	GAME_SCENE_START,
@@ -71,10 +72,11 @@ int GameScene;					//ゲームシーンを管理
 //画像関連
 IMAGE ImageStartBG;				//スタート画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
+IMAGE ImagePlayBG;				//プレイ画面の背景
 
 //音楽関連
-MUSIC Start_BGM;
-MUSIC Play_BGM;
+MUSIC Start_BGM;				//スタート画面の背景
+MUSIC Play_BGM;					//プレイ画面の背景
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);			//FPS値を計測、更新する
@@ -341,7 +343,7 @@ VOID MY_PLAY_PROC(VOID)
 //プレイ画面の描画
 VOID MY_PLAY_DRAW(VOID)
 {
-	DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 255, 0), TRUE);
+	DrawGraph(ImagePlayBG.x, ImagePlayBG.y, ImagePlayBG.handle, TRUE);
 	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
 	return;
@@ -406,6 +408,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
 	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;			//Y位置を決める
 
+	//プレイ画面の背景画像
+	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
+	ImagePlayBG.handle = LoadGraph(ImagePlayBG.path);		//読み込み
+	if (ImagePlayBG.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_PLAY_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImagePlayBG.handle, &ImagePlayBG.width, &ImagePlayBG.height);	//画像の幅と高さを取得
+	ImagePlayBG.x = GAME_WIDTH / 2 - ImagePlayBG.width / 2;			//X位置を決める
+	ImagePlayBG.y = GAME_HEIGHT / 2 - ImagePlayBG.height / 2;		//Y位置を決める
+
 	return TRUE;
 }
 
@@ -414,6 +429,7 @@ VOID MY_DELETE_IMAGE(VOID)
 {
 	DeleteGraph(ImageStartBG.handle);
 	DeleteGraph(ImageTitle.handle);
+	DeleteGraph(ImagePlayBG.handle);
 
 	return;
 }
