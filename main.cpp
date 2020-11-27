@@ -27,6 +27,7 @@
 #define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BG_start.png")			//スタート画面の背景
 #define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")				//タイトルロゴ
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
+#define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 
 //エラーメッセージ
 #define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
@@ -41,6 +42,12 @@ enum GAME_SCENE {
 	GAME_SCENE_END,
 };  //ゲームのシーン
 
+enum CHARA_SPEED {
+	CHARA_SPEED_LOW = 1,
+	CHARA_SPEED_MIDI = 2,
+	CHARA_SPEED_HIGI = 3,
+};  //キャラクターのスピード
+
 typedef struct STRUCT_IMAGE
 {
 	char path[PATH_MAX];	//パス
@@ -50,6 +57,14 @@ typedef struct STRUCT_IMAGE
 	int width;				//幅
 	int height;				//高さ
 }IMAGE;  //画像構造体
+
+typedef struct STRUCT_CHARA
+{
+	IMAGE image;			//IMAGE構造体
+	int speed;				//速さ
+	int CenterX;			//中心X
+	int CenterY;			//中心Y
+}CHARA;  //キャラクター構造体
 
 typedef struct STRUCT_MUSIC
 {
@@ -73,6 +88,8 @@ int GameScene;					//ゲームシーンを管理
 IMAGE ImageStartBG;				//スタート画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
+
+CHARA player;					//キャラクター
 
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
@@ -346,6 +363,9 @@ VOID MY_PLAY_DRAW(VOID)
 	DrawGraph(ImagePlayBG.x, ImagePlayBG.y, ImagePlayBG.handle, TRUE);
 	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
+	//プレイヤーを描画
+	DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
+
 	return;
 }
 
@@ -421,6 +441,22 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImagePlayBG.x = GAME_WIDTH / 2 - ImagePlayBG.width / 2;			//X位置を決める
 	ImagePlayBG.y = GAME_HEIGHT / 2 - ImagePlayBG.height / 2;		//Y位置を決める
 
+	//プレイ画面の背景画像
+	strcpy_s(player.image.path, IMAGE_PLAYER_PATH);		//パスの設定
+	player.image.handle = LoadGraph(player.image.path);		//読み込み
+	if (player.image.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_PLAY_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(player.image.handle, &player.image.width, &player.image.height);	//画像の幅と高さを取得
+	player.image.x = GAME_WIDTH / 2 - player.image.width / 2;		//X位置を決める
+	player.image.y = GAME_HEIGHT / 2 - player.image.height / 2;		//Y位置を決める
+	player.CenterX = player.image.x + player.image.width / 2;		//画像の横の中心を探す
+	player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
+	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
+
 	return TRUE;
 }
 
@@ -430,6 +466,8 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageStartBG.handle);
 	DeleteGraph(ImageTitle.handle);
 	DeleteGraph(ImagePlayBG.handle);
+
+	DeleteGraph(player.image.handle);
 
 	return;
 }
