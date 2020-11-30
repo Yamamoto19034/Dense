@@ -354,6 +354,28 @@ VOID MY_PLAY_PROC(VOID)
 		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);
 	}
 
+	//プレイヤーのキー操作(4方向カーソルキーで行う)
+	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
+	{
+		if (player.image.y >= 0)  //画面外でないなら
+			player.image.y -= player.speed;
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
+	{
+		if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
+			player.image.y += player.speed;
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
+	{
+		if (player.image.x >= 0)  //画面外でないなら
+			player.image.x -= player.speed;
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
+	{
+		if (player.image.x + player.image.width <= GAME_WIDTH)  //画面外でないなら
+			player.image.x += player.speed;
+	}
+
 	return;
 }
 
