@@ -463,7 +463,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImagePlayBG.x = GAME_WIDTH / 2 - ImagePlayBG.width / 2;			//X位置を決める
 	ImagePlayBG.y = GAME_HEIGHT / 2 - ImagePlayBG.height / 2;		//Y位置を決める
 
-	//プレイ画面の背景画像
+	//プレイヤー画像
 	strcpy_s(player.image.path, IMAGE_PLAYER_PATH);		//パスの設定
 	player.image.handle = LoadGraph(player.image.path);		//読み込み
 	if (player.image.handle == -1)
