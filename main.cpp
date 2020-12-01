@@ -96,6 +96,10 @@ typedef struct STRUCT_CHARA
 	int speed;				//速さ
 	int CenterX;			//中心X
 	int CenterY;			//中心Y
+
+	//デバッグ用
+	RECT coll;				//当たり判定
+	iPOINT collBeforePt;	//当たる前の座標
 }CHARA;  //キャラクター構造体
 
 typedef struct STRUCT_MUSIC
@@ -171,31 +175,37 @@ MAP map[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 //スタートの位置
 iPOINT startPt{ -1,-1 };
 
+//マップの当たり判定
+RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
+
 //######プロトタイプ宣言######
-VOID MY_FPS_UPDATE(VOID);			//FPS値を計測、更新する
-VOID MY_FPS_DRAW(VOID);				//FPS値を描画する
-VOID MY_FPS_WAIT(VOID);				//FPS値を計測し、待つ
+VOID MY_FPS_UPDATE(VOID);				//FPS値を計測、更新する
+VOID MY_FPS_DRAW(VOID);					//FPS値を描画する
+VOID MY_FPS_WAIT(VOID);					//FPS値を計測し、待つ
 
-VOID MY_ALL_KEYDOWN_UPDATE(VOID);	//キーの入力状態を更新する
-BOOL MY_KEY_DOWN(int);				//キーを押しているか、キーコードで判断する
+VOID MY_ALL_KEYDOWN_UPDATE(VOID);		//キーの入力状態を更新する
+BOOL MY_KEY_DOWN(int);					//キーを押しているか、キーコードで判断する
 
-VOID MY_START(VOID);				//スタート画面
-VOID MY_START_PROC(VOID);			//スタート画面の処理
-VOID MY_START_DRAW(VOID);			//スタート画面の描画
+VOID MY_START(VOID);					//スタート画面
+VOID MY_START_PROC(VOID);				//スタート画面の処理
+VOID MY_START_DRAW(VOID);				//スタート画面の描画
 
-VOID MY_PLAY(VOID);					//プレイ画面
-VOID MY_PLAY_PROC(VOID);			//プレイ画面の処理
-VOID MY_PLAY_DRAW(VOID);			//プレイ画面の描画
+VOID MY_PLAY(VOID);						//プレイ画面
+VOID MY_PLAY_PROC(VOID);				//プレイ画面の処理
+VOID MY_PLAY_DRAW(VOID);				//プレイ画面の描画
 
-VOID MY_END(VOID);					//エンド画面
-VOID MY_END_PROC(VOID);				//エンド画面の処理
-VOID MY_END_DRAW(VOID);				//エンド画面の描画
+VOID MY_END(VOID);						//エンド画面
+VOID MY_END_PROC(VOID);					//エンド画面の処理
+VOID MY_END_DRAW(VOID);					//エンド画面の描画
 
-BOOL MY_LOAD_IMAGE(VOID);			//画像をまとめて読み込む関数
-VOID MY_DELETE_IMAGE(VOID);			//画像をまとめて削除する関数
+BOOL MY_LOAD_IMAGE(VOID);				//画像をまとめて読み込む関数
+VOID MY_DELETE_IMAGE(VOID);				//画像をまとめて削除する関数
 
-BOOL MY_LOAD_MUSIC(VOID);			//音楽をまとめて読み込む関数
-VOID MY_DELETE_MUSIC(VOID);			//音楽をまとめて削除する関数
+BOOL MY_LOAD_MUSIC(VOID);				//音楽をまとめて読み込む関数
+VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
+
+BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
+BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -227,8 +237,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (mapData[tate][yoko] == s)
 			{
 				//スタート位置を計算
-				startPt.x = mapChip.width * yoko + mapChip.width / 2;	//中心X座標を取得
-				startPt.y = mapChip.height * tate + mapChip.height / 2;	//中心Y座標を取得
+				startPt.x = mapChip.width * yoko;	//中心X座標を取得
+				startPt.y = mapChip.height * tate;	//中心Y座標を取得
 				break;
 			}
 		}
@@ -397,6 +407,10 @@ VOID MY_START_PROC(VOID)
 		player.image.x = player.CenterX;
 		player.image.y = player.CenterY;
 
+		//プレイヤーの当たる以前の位置を設定する
+		player.collBeforePt.x = player.CenterX;
+		player.collBeforePt.y = player.CenterY;
+
 		//プレイシーンへ移動する
 		GameScene = GAME_SCENE_PLAY;
 
@@ -460,6 +474,12 @@ VOID MY_PLAY_PROC(VOID)
 		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);
 	}
 
+	//プレイヤーの当たり判定の設定
+	player.coll.left = player.image.x;
+	player.coll.top = player.image.y;
+	player.coll.right = player.image.x + player.image.width;
+	player.coll.bottom = player.image.y + player.image.height;
+
 	//プレイヤーのキー操作(4方向カーソルキーで行う)
 	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
 	{
@@ -501,14 +521,32 @@ VOID MY_PLAY_DRAW(VOID)
 				TRUE);
 		}
 	}
-	{
-
-	}
-
+	
 	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
+
+	//当たり判定の描画(デバッグ用)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			//壁ならば
+			if (mapData[tate][yoko] == w)
+			{
+				DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(0, 0, 255), FALSE);
+			}
+			//通路ならば
+			if (mapData[tate][yoko] == t)
+			{
+				DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(255, 0, 255), FALSE);
+			}
+		}
+	}
 
 	//プレイヤーを描画
 	DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
+
+	//プレイヤーの当たり判定を描画(デバッグ用)
+	DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom, GetColor(255, 0, 0), FALSE);
 
 	return;
 }
@@ -637,6 +675,18 @@ BOOL MY_LOAD_IMAGE(VOID)
 			map[tate][yoko].y = tate * map[tate][yoko].height;
 		}
 	}
+	//マップの当たり判定を設定する
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			//マップの当たり判定を設定
+			mapColl[tate][yoko].left = (yoko + 0) * mapChip.width + 1;
+			mapColl[tate][yoko].top = (tate + 0) * mapChip.height + 1;
+			mapColl[tate][yoko].right = (yoko + 1) * mapChip.width - 1;
+			mapColl[tate][yoko].bottom = (tate + 1) * mapChip.height - 1;
+		}
+	}
 
 	return TRUE;
 }
@@ -692,4 +742,38 @@ VOID MY_DELETE_MUSIC(VOID)
 	DeleteSoundMem(Play_BGM.handle);
 
 	return;
+}
+
+//マップとプレイヤーの当たり判定をする関数
+BOOL MY_CHECK_MAP_PLAYER_COLL(RECT player)
+{
+	//マップの当たり判定を設定する
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			//プレイヤーとマップが当たっているとき
+			if (MY_CHECK_RECT_COLL(player, mapColl[tate][yoko]) == TRUE)
+			{
+				//壁のときは、プレイヤーとマップが当たっている
+				if (map[tate][yoko].kind == w) { return TRUE; }
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+//領域の当たり判定をする関数
+BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
+{
+	if (a.left < b.right &&
+		a.top < b.bottom &&
+		a.right > b.left &&
+		a.bottom > b.top)
+	{
+		return TRUE;	//当たっている
+	}
+
+	return FALSE;		//当たっていない
 }
