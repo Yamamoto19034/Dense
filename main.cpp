@@ -29,12 +29,37 @@
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 
+//マップチップ関連
+#define GAME_MAP_TATE_MAX		11  //マップの縦の数
+#define GAME_MAP_YOKO_MAX		16  //マップの横の数
+
+#define GAME_MAP_PATH			TEXT(".\\IMAGE\\mapchip.png")
+
+#define MAP_DIV_WIDTH			60  //画像を分割する幅サイズ
+#define MAP_DIV_HEIGHT			60  //画像を分割する高さサイズ
+#define MAP_DIV_TATE			10  //画像を縦に分割する数
+#define MAP_DIV_YOKO			2   //画像を横に分割する数
+#define MAP_DIV_NUM				MAP_DIV_TATE * MAP_DIV_YOKO  //画像を分割する総数
+
+//エラーメッセージ
+#define START_ERR_TITLE			TEXT("スタート位置エラー")
+#define START_ERR_CAPTION		TEXT("スタート位置が決まってません")
+
 //エラーメッセージ
 #define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
 
 //音楽のパス
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
+
+enum GAME_MAP_KIND
+{
+	n = -1,  //none
+	t = 0,   //通路
+	w = 1,   //壁
+	e = 2,   //人間
+	s = 3,   //スタート
+};  //マップの種類
 
 enum GAME_SCENE {
 	GAME_SCENE_START,
@@ -47,6 +72,13 @@ enum CHARA_SPEED {
 	CHARA_SPEED_MIDI = 2,
 	CHARA_SPEED_HIGI = 3,
 };  //キャラクターのスピード
+
+//int型のPOINT構造体
+typedef struct STRUCT_I_POINT
+{
+	int x = -1;		//座標を初期化
+	int y = -1;		//座標を初期化
+}iPOINT;
 
 typedef struct STRUCT_IMAGE
 {
@@ -72,6 +104,23 @@ typedef struct STRUCT_MUSIC
 	int handle;				//ハンドル
 }MUSIC;  //音楽構造体
 
+typedef struct STRUCT_MAP_IMAGE
+{
+	char path[PATH_MAX];		//パス
+	int handle[MAP_DIV_NUM];	//分割したマップの画像
+	int width;					//幅
+	int height;					//高さ
+}MAPCHIP;   //MAP_IMAGE構造体
+
+typedef struct STRUCT_MAP
+{
+	GAME_MAP_KIND kind;			//マップの種類
+	int x;						//X位置
+	int y;						//Y位置
+	int width;					//幅
+	int height;					//高さ
+}MAP;   //MAP構造体
+
 //######グローバル変数######
 int StartTimeFps;					//測定開始時刻
 int CountFps;					//カウンタ
@@ -94,6 +143,33 @@ CHARA player;					//キャラクター
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
 MUSIC Play_BGM;					//プレイ画面の背景
+
+GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
+	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
+		w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,	//0
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,    //1
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,    //2
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//3
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//4
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//5
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//6
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//7
+		w,s,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//8
+		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//9
+		w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,	//0
+};   //ゲームのマップ
+
+//ゲームマップの初期化
+GAME_MAP_KIND mapDataInit[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
+
+//マップチップの画像を管理
+MAPCHIP mapChip;
+
+//マップの場所を管理
+MAP map[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
+
+//スタートの位置
+iPOINT startPt{ -1,-1 };
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);			//FPS値を計測、更新する
@@ -138,12 +214,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//音楽を読み込む
 	if (MY_LOAD_MUSIC() == FALSE) { return -1; }
 
-	int DrawX = 0;	//表示位置X
-	int DrawY = 0;	//表示位置Y
-
 	GameScene = GAME_SCENE_START;	//ゲームシーンはスタート画面から
 
 	SetDrawScreen(DX_SCREEN_BACK);	//Draw系関数は裏画面に描画
+
+	//プレイヤーの最初の位置を、スタート位置にする
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			//スタート位置を探す
+			if (mapData[tate][yoko] == s)
+			{
+				//スタート位置を計算
+				startPt.x = mapChip.width * yoko + mapChip.width / 2;	//中心X座標を取得
+				startPt.y = mapChip.height * tate + mapChip.height / 2;	//中心Y座標を取得
+				break;
+			}
+		}
+		//スタート位置が決まっていれば、ループ終了
+		if (startPt.x != -1 && startPt.y != -1) { break; }
+	}
+	//スタート位置が決まっていなければ
+	if (startPt.x == -1 && startPt.y == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), START_ERR_CAPTION, START_ERR_TITLE, MB_OK);
+		return -1;
+	}
 
 	//無限ループ
 	while (TRUE)
@@ -291,6 +389,14 @@ VOID MY_START_PROC(VOID)
 			StopSoundMem(Start_BGM.handle);  //BGMを止める
 		}
 
+		//プレイヤーの中心位置を計算する
+		player.CenterX = startPt.x;
+		player.CenterY = startPt.y;
+
+		//プレイヤーの画像の位置を設定する
+		player.image.x = player.CenterX;
+		player.image.y = player.CenterY;
+
 		//プレイシーンへ移動する
 		GameScene = GAME_SCENE_PLAY;
 
@@ -383,6 +489,22 @@ VOID MY_PLAY_PROC(VOID)
 VOID MY_PLAY_DRAW(VOID)
 {
 	DrawGraph(ImagePlayBG.x, ImagePlayBG.y, ImagePlayBG.handle, TRUE);
+
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			DrawGraph(
+				map[tate][yoko].x,
+				map[tate][yoko].y,
+				mapChip.handle[map[tate][yoko].kind],
+				TRUE);
+		}
+	}
+	{
+
+	}
+
 	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
 	//プレイヤーを描画
@@ -479,17 +601,60 @@ BOOL MY_LOAD_IMAGE(VOID)
 	player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
 	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
 
+	//マップの画像を分割する
+	int mapRes = LoadDivGraph(
+		GAME_MAP_PATH,								//マップチップのパス
+		MAP_DIV_NUM, MAP_DIV_TATE, MAP_DIV_YOKO,	//分割する数
+		MAP_DIV_WIDTH, MAP_DIV_HEIGHT,				//画像を分割する幅と高さ
+		&mapChip.handle[0]);						//分割した画像が入るハンドル
+
+	if (mapRes == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), GAME_MAP_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	//幅と高さを取得
+	GetGraphSize(mapChip.handle[0], &mapChip.width, &mapChip.height);
+
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		{
+			//マップデータ初期化用に情報をコピー
+			mapDataInit[tate][yoko] = mapData[tate][yoko];
+
+			//マップの種類をコピー
+			map[tate][yoko].kind = mapData[tate][yoko];
+
+			//マップの幅と高さをコピー
+			map[tate][yoko].width = mapChip.width;
+			map[tate][yoko].height = mapChip.height;
+
+			//マップの座標を取得
+			map[tate][yoko].x = yoko * map[tate][yoko].width;
+			map[tate][yoko].y = tate * map[tate][yoko].height;
+		}
+	}
+
 	return TRUE;
 }
 
 //画像をまとめて削除する関数
 VOID MY_DELETE_IMAGE(VOID)
 {
-	DeleteGraph(ImageStartBG.handle);
-	DeleteGraph(ImageTitle.handle);
-	DeleteGraph(ImagePlayBG.handle);
+	DeleteGraph(ImageStartBG.handle);		//スタート画面の背景
+	DeleteGraph(ImageTitle.handle);			//タイトルロゴ
+	DeleteGraph(ImagePlayBG.handle);		//プレイ画面の背景
 
-	DeleteGraph(player.image.handle);
+	DeleteGraph(player.image.handle);		//プレイヤー画像
+
+	//マップチップの削除
+	for (int num = 0; num < MAP_DIV_NUM; num++)
+	{
+		DeleteGraph(mapChip.handle[num]);
+	}
 
 	return;
 }
