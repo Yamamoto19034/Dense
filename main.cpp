@@ -57,7 +57,7 @@ enum GAME_MAP_KIND
 	n = -1,  //none
 	t = 0,   //通路
 	w = 1,   //壁
-	e = 2,   //人間
+	h = 2,   //人間
 	s = 3,   //スタート
 };  //マップの種類
 
@@ -153,11 +153,11 @@ GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 		w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,	//0
 		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,    //1
 		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,    //2
-		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//3
-		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//4
-		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//5
-		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//6
-		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//7
+		w,t,t,w,t,t,w,t,t,w,t,t,w,t,t,w,	//3
+		w,t,t,w,t,t,w,t,t,w,t,t,w,t,t,w,	//4
+		w,t,t,w,t,t,w,t,t,w,t,t,w,t,t,w,	//5
+		w,t,t,w,t,t,w,t,t,w,t,t,w,t,t,w,	//6
+		w,t,t,w,t,t,w,t,t,w,t,t,w,t,t,w,	//7
 		w,s,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//8
 		w,t,t,t,t,t,t,t,t,t,t,t,t,t,t,w,	//9
 		w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,	//0
@@ -479,6 +479,8 @@ VOID MY_PLAY_PROC(VOID)
 	player.coll.top = player.image.y;
 	player.coll.right = player.image.x + player.image.width;
 	player.coll.bottom = player.image.y + player.image.height;
+
+	BOOL IsMove = TRUE;
 
 	//プレイヤーのキー操作(4方向カーソルキーで行う)
 	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
