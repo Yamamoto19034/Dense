@@ -28,6 +28,7 @@
 #define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")				//タイトルロゴ
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
+#define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -52,13 +53,15 @@
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
 
+//制限時間
+#define TIMELIMIT				10 * 1000		//60秒間
+
 enum GAME_MAP_KIND
 {
 	n = -1,  //none
 	t = 0,   //通路
 	w = 1,   //壁
-	h = 2,   //人間
-	s = 3,   //スタート
+	s = 2,   //スタート
 };  //マップの種類
 
 enum GAME_SCENE {
@@ -141,12 +144,21 @@ int GameScene;					//ゲームシーンを管理
 IMAGE ImageStartBG;				//スタート画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
+IMAGE ImageHuman;				//人間(客)の描画
 
 CHARA player;					//キャラクター
 
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
 MUSIC Play_BGM;					//プレイ画面の背景
+
+//時間関連
+int StartTime = 0;				//計測開始時間
+int ElaTime = 0;				//残り時間
+int CDTimeLimit = 0;			//カウントダウン用の制限時間(CD = Count Down)
+int TimeLimit = 0;				//制限時間
+BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
+BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -411,8 +423,9 @@ VOID MY_START_PROC(VOID)
 		player.collBeforePt.x = player.CenterX;
 		player.collBeforePt.y = player.CenterY;
 
-		//プレイシーンへ移動する
-		GameScene = GAME_SCENE_PLAY;
+		//プレイ画面に向けて準備
+		TimeLimit = TIMELIMIT;			//制限時間を設定
+		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
 
 		return;  //強制的にプレイシーンへ移動する
 	}
@@ -422,7 +435,7 @@ VOID MY_START_PROC(VOID)
 	{
 		//BGMの音量を下げる
 		ChangeVolumeSoundMem(255 * 50 / 100, Start_BGM.handle);  //50%の音量にする
-		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);
+		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);		 //ループ再生
 	}
 
 	return;
@@ -451,6 +464,14 @@ VOID MY_PLAY(VOID)
 //プレイ画面の処理
 VOID MY_PLAY_PROC(VOID)
 {
+	//BGMが流れていないなら
+	if (CheckSoundMem(Play_BGM.handle) == 0)
+	{
+		//BGMの音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Play_BGM.handle);  //50%の音量にする
+		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);		//ループ再生
+	}
+
 	//スペースキー押したら、エンドシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_SPACE) == TRUE)
 	{
@@ -466,42 +487,81 @@ VOID MY_PLAY_PROC(VOID)
 		return;  //強制的にエンドシーンへ移動する
 	}
 
-	//BGMが流れていないなら
-	if (CheckSoundMem(Play_BGM.handle) == 0)
+	if (First_flg)  //まずはカウントダウンからスタート
 	{
-		//BGMの音量を下げる
-		ChangeVolumeSoundMem(255 * 50 / 100, Play_BGM.handle);  //50%の音量にする
-		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);
-	}
+		if (CountDown)  //基準時間を取得
+		{
+			StartTime = GetNowCount();
+			CountDown = FALSE;			//これ以降、このif文は行わない
+		}
 
-	//プレイヤーの当たり判定の設定
-	player.coll.left = player.image.x;
-	player.coll.top = player.image.y;
-	player.coll.right = player.image.x + player.image.width;
-	player.coll.bottom = player.image.y + player.image.height;
+		//現在の時間を取得
+		int NowCount = GetNowCount();
+		CDTimeLimit = 3 * 1000;		//制限時間を設定
+		ElaTime = CDTimeLimit - (NowCount - StartTime);  //カウントダウンを行う
 
-	BOOL IsMove = TRUE;
+		//経過時間が0秒になったら(3,2,1 で終了させるため <=)
+		if (ElaTime <= 0)
+		{
+			StartTime = GetNowCount();	//本番に向けて基準時間を取得
+			First_flg = FALSE;			//これ以降はカウントダウンを行わない
+		}
+	}
+	else 
+	{
+		//現在の時間を取得
+		int NowCount = GetNowCount();
 
-	//プレイヤーのキー操作(4方向カーソルキーで行う)
-	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
-	{
-		if (player.image.y >= 0)  //画面外でないなら
-			player.image.y -= player.speed;
-	}
-	if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
-	{
-		if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
-			player.image.y += player.speed;
-	}
-	if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
-	{
-		if (player.image.x >= 0)  //画面外でないなら
-			player.image.x -= player.speed;
-	}
-	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
-	{
-		if (player.image.x + player.image.width <= GAME_WIDTH)  //画面外でないなら
-			player.image.x += player.speed;
+		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
+		ElaTime = TimeLimit - (NowCount - StartTime);
+
+		//経過時間が0秒になったら(・・・3,2,1 で終了させるため <=)
+		if (ElaTime <= 0)
+		{
+			GameScene = GAME_SCENE_END;	//エンドシーンへ移動する
+
+			//BGMが流れているなら
+			if (CheckSoundMem(Play_BGM.handle) != 0)
+			{
+				StopSoundMem(Play_BGM.handle);		//BGMを止める
+			}
+
+			//次もカウントダウンを行うため元に戻す
+			First_flg = TRUE;
+			CountDown = TRUE;
+
+			return;
+		}
+
+		//プレイヤーの当たり判定の設定
+		player.coll.left = player.image.x;
+		player.coll.top = player.image.y;
+		player.coll.right = player.image.x + player.image.width;
+		player.coll.bottom = player.image.y + player.image.height;
+
+		BOOL IsMove = TRUE;
+
+		//プレイヤーのキー操作(4方向カーソルキーで行う)
+		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
+		{
+			if (player.image.y >= 0)  //画面外でないなら
+				player.image.y -= player.speed;
+		}
+		if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
+		{
+			if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
+				player.image.y += player.speed;
+		}
+		if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
+		{
+			if (player.image.x >= 0)  //画面外でないなら
+				player.image.x -= player.speed;
+		}
+		if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
+		{
+			if (player.image.x + player.image.width <= GAME_WIDTH)  //画面外でないなら
+				player.image.x += player.speed;
+		}
 	}
 
 	return;
@@ -526,29 +586,47 @@ VOID MY_PLAY_DRAW(VOID)
 	
 	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
-	//当たり判定の描画(デバッグ用)
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	if (First_flg)  //最初のカウントダウン
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		DrawFormatString(0, 0, GetColor(255, 0, 0), "%d", (ElaTime / 1000) + 1);
+	}
+	else
+	{
+		//制限時間の表示
+		//1000で割って「ミリ秒単位」から「秒単位」に
+		//0 が出てきてしまうので +1する
+		if ((ElaTime / 1000 + 1) <= 3)  //残り 秒は赤字にする
+			DrawFormatString(0, 0, GetColor(255, 0, 0), "%d", (ElaTime / 1000) + 1);
+		else
+			DrawFormatString(0, 0, GetColor(255, 255, 255), "%d", (ElaTime / 1000) + 1);
+
+		//当たり判定の描画(デバッグ用)
+		for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
 		{
-			//壁ならば
-			if (mapData[tate][yoko] == w)
+			for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
 			{
-				DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(0, 0, 255), FALSE);
-			}
-			//通路ならば
-			if (mapData[tate][yoko] == t)
-			{
-				DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(255, 0, 255), FALSE);
+				//壁ならば
+				if (mapData[tate][yoko] == w)
+				{
+					DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(0, 0, 255), FALSE);
+				}
+				//通路ならば
+				if (mapData[tate][yoko] == t)
+				{
+					DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(255, 0, 255), FALSE);
+				}
 			}
 		}
+
+		//人間(客)の描画
+		DrawGraph(ImageHuman.x, ImageHuman.y, ImageHuman.handle, TRUE);
+
+		//プレイヤーを描画
+		DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
+
+		//プレイヤーの当たり判定を描画(デバッグ用)
+		DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom, GetColor(255, 0, 0), FALSE);
 	}
-
-	//プレイヤーを描画
-	DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
-
-	//プレイヤーの当たり判定を描画(デバッグ用)
-	DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom, GetColor(255, 0, 0), FALSE);
 
 	return;
 }
@@ -641,6 +719,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
 	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
 
+	//人間(客)の画像
+	strcpy_s(ImageHuman.path, IMAGE_HUMAN_PATH);		//パスの設定
+	ImageHuman.handle = LoadGraph(ImageHuman.path);		//読み込み
+	if (ImageHuman.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_HUMAN_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageHuman.handle, &ImageHuman.width, &ImageHuman.height);	//画像の幅と高さを取得
+	ImageHuman.x = 0;												//X位置を決める(デフォルト)
+	ImageHuman.y = 0;												//Y位置を決める(デフォルト)
+
 	//マップの画像を分割する
 	int mapRes = LoadDivGraph(
 		GAME_MAP_PATH,								//マップチップのパス
@@ -701,6 +792,8 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImagePlayBG.handle);		//プレイ画面の背景
 
 	DeleteGraph(player.image.handle);		//プレイヤー画像
+
+	DeleteGraph(ImageHuman.handle);			//人間(客)の削除
 
 	//マップチップの削除
 	for (int num = 0; num < MAP_DIV_NUM; num++)
