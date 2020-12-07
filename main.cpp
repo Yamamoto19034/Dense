@@ -54,7 +54,8 @@
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
 
 //制限時間
-#define TIMELIMIT				10 * 1000		//60秒間
+#define TIMELIMIT				60 * 1000		//60秒間
+#define EASY					5 * 1000
 
 enum GAME_MAP_KIND
 {
@@ -105,6 +106,23 @@ typedef struct STRUCT_CHARA
 	iPOINT collBeforePt;	//当たる前の座標
 }CHARA;  //キャラクター構造体
 
+typedef struct STRUCT_HUMAN
+{
+	IMAGE image;					//イメージ構造体
+
+	RECT Human_Coll;				//当たり判定
+	iPOINT Human_CollBeforePt;		//当たる前の座標
+}HUMAN;  //最初に出現する用
+
+typedef struct STRUCT_HUMAN_TIME
+{
+	IMAGE Humanimage;				//イメージ構造体
+	BOOL IsDraw;					//描画できるか否か
+
+	RECT HumanCons_Coll;			//当たり判定
+	iPOINT HumanCons_CollBeforePt;	//当たる前の座標
+}HUMAN_CONSTANT;  //時間経過で出す用の人間
+
 typedef struct STRUCT_MUSIC
 {
 	char path[PATH_MAX];	//パス
@@ -146,6 +164,13 @@ IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 
+/*▼▼▼▼▼ デバッグ用 ▼▼▼▼▼*/
+HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
+HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
+int TimeDraw = 0;				//Human_Consの配列の添え字
+//BOOL IsPrint = FALSE;			//プリントできるか否か
+//▲▲▲▲▲ デバッグ用ここまで ▲▲▲▲▲
+
 CHARA player;					//キャラクター
 
 //音楽関連
@@ -159,6 +184,8 @@ int CDTimeLimit = 0;			//カウントダウン用の制限時間(CD = Count Down)
 int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
+int ConstantTime = 0;
+int StartTime2 = 0;
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -427,6 +454,20 @@ VOID MY_START_PROC(VOID)
 		TimeLimit = TIMELIMIT;			//制限時間を設定
 		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
 
+		//ここで描画位置を決める(最初に出現する用)
+		for (int i = 0; i < 5; i++)
+		{
+			IMAGEHuman[i].image.x = 60 * GetRand(15);
+			IMAGEHuman[i].image.y = 60 * GetRand(10);
+		}
+		//ここで描画位置を決める(一定時間で出現する用)
+		for (int i = 0; i < 15; i++)
+		{
+			Human_Cons[i].Humanimage.x = 60 * GetRand(15);
+			Human_Cons[i].Humanimage.y = 60 * GetRand(10);
+		}
+		//▲▲▲▲▲ デバッグ用ここまで ▲▲▲▲▲
+
 		return;  //強制的にプレイシーンへ移動する
 	}
 
@@ -503,14 +544,16 @@ VOID MY_PLAY_PROC(VOID)
 		//経過時間が0秒になったら(3,2,1 で終了させるため <=)
 		if (ElaTime <= 0)
 		{
-			StartTime = GetNowCount();	//本番に向けて基準時間を取得
-			First_flg = FALSE;			//これ以降はカウントダウンを行わない
+			StartTime = GetNowCount();		//本番に向けて基準時間を取得
+			ConstantTime = GetNowCount();	//本番に向けて基準時間を取得
+			First_flg = FALSE;				//これ以降はカウントダウンを行わない
 		}
 	}
 	else 
 	{
 		//現在の時間を取得
-		int NowCount = GetNowCount();
+		int NowCount = GetNowCount();	//制限時間用
+		int NowCount2 = GetNowCount();	//一定時間で出現する用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -531,6 +574,14 @@ VOID MY_PLAY_PROC(VOID)
 			CountDown = TRUE;
 
 			return;
+		}
+
+		//一定時間で人間を出現させる処理
+		if (NowCount2 - ConstantTime >= EASY)
+		{
+			Human_Cons[TimeDraw].IsDraw = TRUE;		//描画できる
+			TimeDraw++;								//次の配列に
+			ConstantTime = GetNowCount();			//再度時間を取得してリセット
 		}
 
 		//プレイヤーの当たり判定の設定
@@ -618,8 +669,20 @@ VOID MY_PLAY_DRAW(VOID)
 			}
 		}
 
-		//人間(客)の描画
-		DrawGraph(ImageHuman.x, ImageHuman.y, ImageHuman.handle, TRUE);
+		//↓人間(客)の描画↓
+		//最初に出現する用
+		for (int i = 0; i < 5; i++)
+		{
+			DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
+		}
+		//一定時間で出現する用
+		for (int i = 0; i < 15; i++)
+		{
+			if (Human_Cons[i].IsDraw == TRUE)
+			{
+				DrawGraph(Human_Cons[i].Humanimage.x, Human_Cons[i].Humanimage.y, Human_Cons[i].Humanimage.handle, TRUE);
+			}
+		}
 
 		//プレイヤーを描画
 		DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
@@ -719,18 +782,38 @@ BOOL MY_LOAD_IMAGE(VOID)
 	player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
 	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
 
-	//人間(客)の画像
-	strcpy_s(ImageHuman.path, IMAGE_HUMAN_PATH);		//パスの設定
-	ImageHuman.handle = LoadGraph(ImageHuman.path);		//読み込み
-	if (ImageHuman.handle == -1)
+	//↓人間(客)の画像↓
+	//最初に出現する用
+	for (int i = 0; i < 5; i++)
 	{
-		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), IMAGE_HUMAN_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
-		return FALSE;
+		strcpy_s(IMAGEHuman[i].image.path, IMAGE_HUMAN_PATH);
 	}
-	GetGraphSize(ImageHuman.handle, &ImageHuman.width, &ImageHuman.height);	//画像の幅と高さを取得
-	ImageHuman.x = 0;												//X位置を決める(デフォルト)
-	ImageHuman.y = 0;												//Y位置を決める(デフォルト)
+	for (int i = 0; i < 5; i++)
+	{
+		IMAGEHuman[i].image.handle = LoadGraph(IMAGEHuman[i].image.path);
+		if (IMAGEHuman[i].image.handle == -1)
+		{
+			MessageBox(GetMainWindowHandle(), IMAGE_PLAYER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+			return FALSE;
+		}
+		GetGraphSize(IMAGEHuman[i].image.handle, &IMAGEHuman[i].image.width, &IMAGEHuman[i].image.height);
+	}
+	//一定時間で描画する用
+	for (int i = 0; i < 15; i++)  //読み込み
+	{
+		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
+	}
+	for (int i = 0; i < 15; i++)  //ハンドル・大きさの取得
+	{
+		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
+		if (Human_Cons[i].Humanimage.handle == -1)
+		{
+			MessageBox(GetMainWindowHandle(), IMAGE_PLAYER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+			return FALSE;
+		}
+		GetGraphSize(Human_Cons[i].Humanimage.handle, &Human_Cons[i].Humanimage.width, &Human_Cons[i].Humanimage.height);
+		Human_Cons[i].IsDraw = FALSE;
+	}
 
 	//マップの画像を分割する
 	int mapRes = LoadDivGraph(
@@ -794,6 +877,16 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(player.image.handle);		//プレイヤー画像
 
 	DeleteGraph(ImageHuman.handle);			//人間(客)の削除
+
+	for (int i = 0; i < 5; i++)				//最初に出現する用
+	{
+		DeleteGraph(IMAGEHuman[i].image.handle);
+	}
+
+	for (int i = 0; i < 15; i++)			//一定時間で出現する用
+	{
+		DeleteGraph(Human_Cons[i].Humanimage.handle);
+	}
 
 	//マップチップの削除
 	for (int num = 0; num < MAP_DIV_NUM; num++)
