@@ -98,8 +98,8 @@ typedef struct STRUCT_CHARA
 {
 	IMAGE image;			//IMAGE構造体
 	int speed;				//速さ
-	int CenterX;			//中心X
-	int CenterY;			//中心Y
+	//int CenterX;			//中心X
+	//int CenterY;			//中心Y
 
 	//デバッグ用
 	RECT coll;				//当たり判定
@@ -109,6 +109,7 @@ typedef struct STRUCT_CHARA
 typedef struct STRUCT_HUMAN
 {
 	IMAGE image;					//イメージ構造体
+	BOOL IsDraw;					//描画できるか否か
 
 	RECT Human_Coll;				//当たり判定
 	iPOINT Human_CollBeforePt;		//当たる前の座標
@@ -164,12 +165,9 @@ IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 
-/*▼▼▼▼▼ デバッグ用 ▼▼▼▼▼*/
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
 int TimeDraw = 0;				//Human_Consの配列の添え字
-//BOOL IsPrint = FALSE;			//プリントできるか否か
-//▲▲▲▲▲ デバッグ用ここまで ▲▲▲▲▲
 
 CHARA player;					//キャラクター
 
@@ -439,16 +437,12 @@ VOID MY_START_PROC(VOID)
 		}
 
 		//プレイヤーの中心位置を計算する
-		player.CenterX = startPt.x;
-		player.CenterY = startPt.y;
+		//player.CenterX = startPt.x;
+		//player.CenterY = startPt.y;
 
 		//プレイヤーの画像の位置を設定する
-		player.image.x = player.CenterX;
-		player.image.y = player.CenterY;
-
-		//プレイヤーの当たる以前の位置を設定する
-		player.collBeforePt.x = player.CenterX;
-		player.collBeforePt.y = player.CenterY;
+		player.image.x = startPt.x;
+		player.image.y = startPt.y;
 
 		//プレイ画面に向けて準備
 		TimeLimit = TIMELIMIT;			//制限時間を設定
@@ -466,7 +460,6 @@ VOID MY_START_PROC(VOID)
 			Human_Cons[i].Humanimage.x = 60 * GetRand(15);
 			Human_Cons[i].Humanimage.y = 60 * GetRand(10);
 		}
-		//▲▲▲▲▲ デバッグ用ここまで ▲▲▲▲▲
 
 		return;  //強制的にプレイシーンへ移動する
 	}
@@ -583,15 +576,6 @@ VOID MY_PLAY_PROC(VOID)
 			TimeDraw++;								//次の配列に
 			ConstantTime = GetNowCount();			//再度時間を取得してリセット
 		}
-
-		//プレイヤーの当たり判定の設定
-		player.coll.left = player.image.x;
-		player.coll.top = player.image.y;
-		player.coll.right = player.image.x + player.image.width;
-		player.coll.bottom = player.image.y + player.image.height;
-
-		BOOL IsMove = TRUE;
-
 		//プレイヤーのキー操作(4方向カーソルキーで行う)
 		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
 		{
@@ -613,6 +597,24 @@ VOID MY_PLAY_PROC(VOID)
 			if (player.image.x + player.image.width <= GAME_WIDTH)  //画面外でないなら
 				player.image.x += player.speed;
 		}
+
+		//プレイヤーの当たり判定の設定
+		player.coll.left = player.image.x;
+		player.coll.top = player.image.y;
+		player.coll.right = player.image.x + player.image.width;
+		player.coll.bottom = player.image.y + player.image.height;
+
+		//プレイヤーと壁が当たっていたら
+		if (MY_CHECK_MAP_PLAYER_COLL(player.coll) == TRUE)
+		{
+			//通り抜け不可
+			player.image.x = player.collBeforePt.x;		//今いる場所のX座標を代入
+			player.image.y = player.collBeforePt.y;		//今いる場所のY座標を代入
+		}
+
+		//常に座標を取得しておく
+		player.collBeforePt.x = player.image.x;
+		player.collBeforePt.y = player.image.y;
 	}
 
 	return;
@@ -673,15 +675,14 @@ VOID MY_PLAY_DRAW(VOID)
 		//最初に出現する用
 		for (int i = 0; i < 5; i++)
 		{
-			DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
+			if(IMAGEHuman[i].IsDraw == TRUE)
+				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
 		}
 		//一定時間で出現する用
 		for (int i = 0; i < 15; i++)
 		{
 			if (Human_Cons[i].IsDraw == TRUE)
-			{
 				DrawGraph(Human_Cons[i].Humanimage.x, Human_Cons[i].Humanimage.y, Human_Cons[i].Humanimage.handle, TRUE);
-			}
 		}
 
 		//プレイヤーを描画
@@ -778,39 +779,44 @@ BOOL MY_LOAD_IMAGE(VOID)
 	GetGraphSize(player.image.handle, &player.image.width, &player.image.height);	//画像の幅と高さを取得
 	player.image.x = GAME_WIDTH / 2 - player.image.width / 2;		//X位置を決める
 	player.image.y = GAME_HEIGHT / 2 - player.image.height / 2;		//Y位置を決める
-	player.CenterX = player.image.x + player.image.width / 2;		//画像の横の中心を探す
-	player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
+	//player.CenterX = player.image.x + player.image.width / 2;		//画像の横の中心を探す
+	//player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
 	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
 
 	//↓人間(客)の画像↓
 	//最初に出現する用
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 5; i++)  //読み込み
 	{
 		strcpy_s(IMAGEHuman[i].image.path, IMAGE_HUMAN_PATH);
 	}
 	for (int i = 0; i < 5; i++)
 	{
+		//ハンドルの取得
 		IMAGEHuman[i].image.handle = LoadGraph(IMAGEHuman[i].image.path);
 		if (IMAGEHuman[i].image.handle == -1)
 		{
 			MessageBox(GetMainWindowHandle(), IMAGE_PLAYER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
 			return FALSE;
 		}
+		//大きさの取得
 		GetGraphSize(IMAGEHuman[i].image.handle, &IMAGEHuman[i].image.width, &IMAGEHuman[i].image.height);
+		IMAGEHuman[i].IsDraw = TRUE;
 	}
 	//一定時間で描画する用
 	for (int i = 0; i < 15; i++)  //読み込み
 	{
 		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 15; i++)  //ハンドル・大きさの取得
+	for (int i = 0; i < 15; i++)
 	{
+		//ハンドルの取得
 		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
 		if (Human_Cons[i].Humanimage.handle == -1)
 		{
 			MessageBox(GetMainWindowHandle(), IMAGE_PLAYER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
 			return FALSE;
 		}
+		//大きさの取得
 		GetGraphSize(Human_Cons[i].Humanimage.handle, &Human_Cons[i].Humanimage.width, &Human_Cons[i].Humanimage.height);
 		Human_Cons[i].IsDraw = FALSE;
 	}
