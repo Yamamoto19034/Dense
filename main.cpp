@@ -42,6 +42,9 @@
 #define MAP_DIV_YOKO			2   //画像を横に分割する数
 #define MAP_DIV_NUM				MAP_DIV_TATE * MAP_DIV_YOKO  //画像を分割する総数
 
+#define IMAGE_HUMAN_WIDTH		60
+#define IMAGE_HUMAN_HEIGHT		60
+
 //エラーメッセージ
 #define START_ERR_TITLE			TEXT("スタート位置エラー")
 #define START_ERR_CAPTION		TEXT("スタート位置が決まってません")
@@ -242,10 +245,9 @@ BOOL MY_LOAD_MUSIC(VOID);				//音楽をまとめて読み込む関数
 VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
 
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
-BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
-
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
-VOID COLLPROC(VOID);					//マップとプレイヤーの当たり判定をする関数				
+BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
+VOID COLLPROC(VOID);					//当たり判定をする関数				
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -451,22 +453,31 @@ VOID MY_START_PROC(VOID)
 		TimeLimit = TIMELIMIT;			//制限時間を設定
 		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
 
-		//ここで描画位置を決める(最初に出現する用)
+		//最初に出現する用
 		for (int i = 0; i < 5; i++)
 		{
-			IMAGEHuman[i].image.x = MAP_DIV_WIDTH * GetRand(15);
-			IMAGEHuman[i].image.y = MAP_DIV_HEIGHT * GetRand(10);
+			//ここで描画位置を決める
+			int x = GetRand(15);
+			int y = GetRand(10);
 
-			IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
-			IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
-			IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + MAP_DIV_WIDTH - 1;
-			IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + MAP_DIV_HEIGHT - 1;
+			if (mapData[x][y] == t)
+			{
+				IMAGEHuman[i].IsDraw = TRUE;
+				IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
+				IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
+
+				//ここで当たり判定の設定をする
+				IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
+				IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
+				IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + IMAGE_HUMAN_WIDTH - 1;
+				IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + IMAGE_HUMAN_HEIGHT - 1;
+			}
 		}
 		//ここで描画位置を決める(一定時間で出現する用)
 		for (int i = 0; i < 15; i++)
 		{
-			Human_Cons[i].Humanimage.x = 60 * GetRand(15);
-			Human_Cons[i].Humanimage.y = 60 * GetRand(10);
+			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * GetRand(15);
+			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * GetRand(10);
 		}
 
 		return;  //強制的にプレイシーンへ移動する
@@ -793,7 +804,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 		//大きさの取得
 		GetGraphSize(IMAGEHuman[i].image.handle, &IMAGEHuman[i].image.width, &IMAGEHuman[i].image.height);
-		IMAGEHuman[i].IsDraw = TRUE;
+		IMAGEHuman[i].IsDraw = FALSE;
 	}
 	//一定時間で描画する用
 	for (int i = 0; i < 15; i++)  //読み込み
@@ -951,6 +962,7 @@ BOOL MY_CHECK_MAP_PLAYER_COLL(RECT player)
 	return FALSE;
 }
 
+//人間とプレイヤーの当たり判定
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 {
 	for (int i = 0; i < 5; i++)
@@ -978,7 +990,7 @@ BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
 	return FALSE;		//当たっていない
 }
 
-//マップとプレイヤーの当たり判定をする関数
+//当たり判定をする関数
 VOID COLLPROC(VOID)
 {
 	//プレイヤーの当たり判定の設定
@@ -995,7 +1007,7 @@ VOID COLLPROC(VOID)
 		player.image.y = player.collBeforePt.y;		//今いる場所のY座標を代入
 	}
 
-	//プレイヤーと壁が当たっていたら
+	//プレイヤーと人間が当たっていたら
 	if (MY_CHECK_HUMAN_PLAYER_COLL(player.coll) == 1)
 	{
 		//通り抜け不可
