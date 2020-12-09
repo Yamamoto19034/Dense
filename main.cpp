@@ -244,6 +244,8 @@ VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
 
+VOID COLLPROC(VOID);					//マップとプレイヤーの当たり判定をする関数				
+
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -598,23 +600,8 @@ VOID MY_PLAY_PROC(VOID)
 				player.image.x += player.speed;
 		}
 
-		//プレイヤーの当たり判定の設定
-		player.coll.left = player.image.x;
-		player.coll.top = player.image.y;
-		player.coll.right = player.image.x + player.image.width;
-		player.coll.bottom = player.image.y + player.image.height;
-
-		//プレイヤーと壁が当たっていたら
-		if (MY_CHECK_MAP_PLAYER_COLL(player.coll) == TRUE)
-		{
-			//通り抜け不可
-			player.image.x = player.collBeforePt.x;		//今いる場所のX座標を代入
-			player.image.y = player.collBeforePt.y;		//今いる場所のY座標を代入
-		}
-
-		//常に座標を取得しておく
-		player.collBeforePt.x = player.image.x;
-		player.collBeforePt.y = player.image.y;
+		//当たり判定
+		COLLPROC();
 	}
 
 	return;
@@ -970,4 +957,28 @@ BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
 	}
 
 	return FALSE;		//当たっていない
+}
+
+//マップとプレイヤーの当たり判定をする関数
+VOID COLLPROC(VOID)
+{
+	//プレイヤーの当たり判定の設定
+	player.coll.left = player.image.x;
+	player.coll.top = player.image.y;
+	player.coll.right = player.image.x + player.image.width;
+	player.coll.bottom = player.image.y + player.image.height;
+
+	//プレイヤーと壁が当たっていたら
+	if (MY_CHECK_MAP_PLAYER_COLL(player.coll) == TRUE)
+	{
+		//通り抜け不可
+		player.image.x = player.collBeforePt.x;		//今いる場所のX座標を代入
+		player.image.y = player.collBeforePt.y;		//今いる場所のY座標を代入
+	}
+
+	//常に座標を取得しておく
+	player.collBeforePt.x = player.image.x;
+	player.collBeforePt.y = player.image.y;
+
+	return;
 }
