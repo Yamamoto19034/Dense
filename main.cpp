@@ -42,8 +42,8 @@
 #define MAP_DIV_YOKO			2   //画像を横に分割する数
 #define MAP_DIV_NUM				MAP_DIV_TATE * MAP_DIV_YOKO  //画像を分割する総数
 
-#define IMAGE_HUMAN_WIDTH		60
-#define IMAGE_HUMAN_HEIGHT		60
+#define IMAGE_HUMAN_WIDTH		60	//人間の画像の幅の大きさ
+#define IMAGE_HUMAN_HEIGHT		60	//人間の画像の高さの大きさ
 
 //エラーメッセージ
 #define START_ERR_TITLE			TEXT("スタート位置エラー")
@@ -460,9 +460,10 @@ VOID MY_START_PROC(VOID)
 			int x = GetRand(15);
 			int y = GetRand(10);
 
+			//座標位置が通路なら(壁とスタート位置には描画しない)
 			if (mapData[x][y] == t)
 			{
-				IMAGEHuman[i].IsDraw = TRUE;
+				IMAGEHuman[i].IsDraw = TRUE;					//表示OK
 				IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
 				IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
 
@@ -804,7 +805,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 		//大きさの取得
 		GetGraphSize(IMAGEHuman[i].image.handle, &IMAGEHuman[i].image.width, &IMAGEHuman[i].image.height);
-		IMAGEHuman[i].IsDraw = FALSE;
+		IMAGEHuman[i].IsDraw = FALSE;			//最初は描画しない
 	}
 	//一定時間で描画する用
 	for (int i = 0; i < 15; i++)  //読み込み
