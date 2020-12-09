@@ -244,6 +244,7 @@ VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
 
+int MY_CHECK_HUMAN_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
 VOID COLLPROC(VOID);					//マップとプレイヤーの当たり判定をする関数				
 
 //########## プログラムで最初に実行される関数 ##########
@@ -453,8 +454,13 @@ VOID MY_START_PROC(VOID)
 		//ここで描画位置を決める(最初に出現する用)
 		for (int i = 0; i < 5; i++)
 		{
-			IMAGEHuman[i].image.x = 60 * GetRand(15);
-			IMAGEHuman[i].image.y = 60 * GetRand(10);
+			IMAGEHuman[i].image.x = MAP_DIV_WIDTH * GetRand(15);
+			IMAGEHuman[i].image.y = MAP_DIV_HEIGHT * GetRand(10);
+
+			IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
+			IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
+			IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + MAP_DIV_WIDTH - 1;
+			IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + MAP_DIV_HEIGHT - 1;
 		}
 		//ここで描画位置を決める(一定時間で出現する用)
 		for (int i = 0; i < 15; i++)
@@ -941,8 +947,21 @@ BOOL MY_CHECK_MAP_PLAYER_COLL(RECT player)
 			}
 		}
 	}
-
+	
 	return FALSE;
+}
+
+int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
+{
+	for (int i = 0; i < 5; i++)
+	{
+		if (MY_CHECK_RECT_COLL(player, IMAGEHuman[i].Human_Coll) == TRUE)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 //領域の当たり判定をする関数
@@ -970,6 +989,14 @@ VOID COLLPROC(VOID)
 
 	//プレイヤーと壁が当たっていたら
 	if (MY_CHECK_MAP_PLAYER_COLL(player.coll) == TRUE)
+	{
+		//通り抜け不可
+		player.image.x = player.collBeforePt.x;		//今いる場所のX座標を代入
+		player.image.y = player.collBeforePt.y;		//今いる場所のY座標を代入
+	}
+
+	//プレイヤーと壁が当たっていたら
+	if (MY_CHECK_HUMAN_PLAYER_COLL(player.coll) == 1)
 	{
 		//通り抜け不可
 		player.image.x = player.collBeforePt.x;		//今いる場所のX座標を代入
