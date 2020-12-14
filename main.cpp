@@ -116,7 +116,7 @@ typedef struct STRUCT_HUMAN
 
 	RECT Human_Coll;				//当たり判定
 
-	BOOL IsContact;
+	BOOL IsContact;					//接しているか否か
 }HUMAN;  //最初に出現する用
 
 typedef struct STRUCT_HUMAN_TIME
@@ -690,10 +690,10 @@ VOID MY_PLAY_DRAW(VOID)
 		{
 			if (IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
 			{
-				if (IMAGEHuman[i].IsContact == TRUE)
-					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);
+				if (IMAGEHuman[i].IsContact == TRUE)  //接しているなら
+					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);  //色を反転させて表示
 				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
-				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
 			}
 		}
 		//一定時間で出現する用
@@ -1001,6 +1001,7 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 //人間同士の当たり判定
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 {
+	//一定時間で出現する vs 一定時間で出現する
 	for (int i = 0; i < 23; i++)
 	{
 		if (i != order)  //同じものは当たり判定のチェックをしない
@@ -1012,11 +1013,12 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 		}
 	}
 
+	//最初に出現する vs 一定時間で出現する
 	for (int i = 0; i < 5; i++)
 	{
 		if (MY_CHECK_RECT_COLL(Human, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
-			IMAGEHuman[i].IsContact = TRUE;
+			IMAGEHuman[i].IsContact = TRUE;		//接している
 			return TRUE;
 		}
 	}
