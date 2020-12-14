@@ -58,7 +58,7 @@
 
 //制限時間
 #define TIMELIMIT				60 * 1000		//60秒間
-#define EASY					5 * 1000
+#define EASY					3 * 1000
 
 enum GAME_MAP_KIND
 {
@@ -125,6 +125,8 @@ typedef struct STRUCT_HUMAN_TIME
 
 	RECT HumanCons_Coll;			//当たり判定
 	iPOINT HumanCons_CollBeforePt;	//当たる前の座標
+
+	BOOL IsContact;
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
 
 typedef struct STRUCT_MUSIC
@@ -169,7 +171,7 @@ IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
-HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
+HUMAN_CONSTANT Human_Cons[25];	//一定時間ごとに出現する用の人間を配列で管理
 int TimeDraw = 0;				//Human_Consの配列の添え字
 
 CHARA player;					//キャラクター
@@ -246,8 +248,10 @@ VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
 
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
+BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
 VOID COLLPROC(VOID);					//当たり判定をする関数				
+VOID HUMANCOLL(VOID);
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -475,10 +479,18 @@ VOID MY_START_PROC(VOID)
 			}
 		}
 		//ここで描画位置を決める(一定時間で出現する用)
-		for (int i = 0; i < 15; i++)
+		for (int i = 0; i < 23; i++)
 		{
-			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * GetRand(15);
-			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * GetRand(10);
+			int x = GetRand(15);
+			int y = GetRand(10);
+
+			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
+			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
+
+			/*Human_Cons[i].HumanCons_Coll.left = Human_Cons[i].Humanimage.x - 5;
+			Human_Cons[i].HumanCons_Coll.top = Human_Cons[i].Humanimage.y - 5;
+			Human_Cons[i].HumanCons_Coll.right = Human_Cons[i].Humanimage.x + IMAGE_HUMAN_WIDTH + 5;
+			Human_Cons[i].HumanCons_Coll.bottom = Human_Cons[i].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;*/
 		}
 
 		return;  //強制的にプレイシーンへ移動する
@@ -593,6 +605,10 @@ VOID MY_PLAY_PROC(VOID)
 		if (NowCount2 - ConstantTime >= EASY)
 		{
 			Human_Cons[TimeDraw].IsDraw = TRUE;		//描画できる
+			Human_Cons[TimeDraw].HumanCons_Coll.left = Human_Cons[TimeDraw].Humanimage.x - 5;
+			Human_Cons[TimeDraw].HumanCons_Coll.top = Human_Cons[TimeDraw].Humanimage.y - 5;
+			Human_Cons[TimeDraw].HumanCons_Coll.right = Human_Cons[TimeDraw].Humanimage.x + IMAGE_HUMAN_WIDTH + 5;
+			Human_Cons[TimeDraw].HumanCons_Coll.bottom = Human_Cons[TimeDraw].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;
 			TimeDraw++;								//次の配列に
 			ConstantTime = GetNowCount();			//再度時間を取得してリセット
 		}
@@ -620,6 +636,7 @@ VOID MY_PLAY_PROC(VOID)
 
 		//当たり判定
 		COLLPROC();
+		HUMANCOLL();
 	}
 
 	return;
@@ -684,10 +701,16 @@ VOID MY_PLAY_DRAW(VOID)
 				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
 		}
 		//一定時間で出現する用
-		for (int i = 0; i < 15; i++)
+		for (int i = 0; i < 23; i++)
 		{
 			if (Human_Cons[i].IsDraw == TRUE)
+			{
+				if(Human_Cons[i].IsContact == TRUE)
+					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);
 				DrawGraph(Human_Cons[i].Humanimage.x, Human_Cons[i].Humanimage.y, Human_Cons[i].Humanimage.handle, TRUE);
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+				Human_Cons[i].IsContact = FALSE;
+			}
 		}
 
 		//プレイヤーを描画
@@ -808,11 +831,11 @@ BOOL MY_LOAD_IMAGE(VOID)
 		IMAGEHuman[i].IsDraw = FALSE;			//最初は描画しない
 	}
 	//一定時間で描画する用
-	for (int i = 0; i < 15; i++)  //読み込み
+	for (int i = 0; i < 23; i++)  //読み込み
 	{
 		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 15; i++)
+	for (int i = 0; i < 23; i++)
 	{
 		//ハンドルの取得
 		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
@@ -824,6 +847,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 		//大きさの取得
 		GetGraphSize(Human_Cons[i].Humanimage.handle, &Human_Cons[i].Humanimage.width, &Human_Cons[i].Humanimage.height);
 		Human_Cons[i].IsDraw = FALSE;
+		Human_Cons[i].IsContact = FALSE;
 	}
 
 	//マップの画像を分割する
@@ -894,7 +918,7 @@ VOID MY_DELETE_IMAGE(VOID)
 		DeleteGraph(IMAGEHuman[i].image.handle);
 	}
 
-	for (int i = 0; i < 15; i++)			//一定時間で出現する用
+	for (int i = 0; i < 23; i++)			//一定時間で出現する用
 	{
 		DeleteGraph(Human_Cons[i].Humanimage.handle);
 	}
@@ -977,6 +1001,22 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 	return 0;
 }
 
+BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
+{
+	for (int i = 0; i < 23; i++)
+	{
+		if (i != order)
+		{
+			if (MY_CHECK_RECT_COLL(Human, Human_Cons[i].HumanCons_Coll) == TRUE)
+			{
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
 //領域の当たり判定をする関数
 BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
 {
@@ -1019,6 +1059,25 @@ VOID COLLPROC(VOID)
 	//常に座標を取得しておく
 	player.collBeforePt.x = player.image.x;
 	player.collBeforePt.y = player.image.y;
+
+	return;
+}
+
+VOID HUMANCOLL(VOID)
+{
+	//プレイヤーの当たり判定の設定
+	player.coll.left = player.image.x;
+	player.coll.top = player.image.y;
+	player.coll.right = player.image.x + player.image.width;
+	player.coll.bottom = player.image.y + player.image.height;
+
+	for (int i = 0; i < 23; i++)
+	{
+		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
+		{
+			Human_Cons[i].IsContact = TRUE;
+		}
+	}
 
 	return;
 }
