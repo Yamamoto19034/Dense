@@ -115,7 +115,8 @@ typedef struct STRUCT_HUMAN
 	BOOL IsDraw;					//描画できるか否か
 
 	RECT Human_Coll;				//当たり判定
-	iPOINT Human_CollBeforePt;		//当たる前の座標
+
+	BOOL IsContact;
 }HUMAN;  //最初に出現する用
 
 typedef struct STRUCT_HUMAN_TIME
@@ -687,8 +688,13 @@ VOID MY_PLAY_DRAW(VOID)
 		//最初に出現する用
 		for (int i = 0; i < 5; i++)
 		{
-			if(IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
+			if (IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
+			{
+				if (IMAGEHuman[i].IsContact == TRUE)
+					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);
 				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+			}
 		}
 		//一定時間で出現する用
 		for (int i = 0; i < 23; i++)
@@ -817,8 +823,10 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 		//大きさの取得
 		GetGraphSize(IMAGEHuman[i].image.handle, &IMAGEHuman[i].image.width, &IMAGEHuman[i].image.height);
-		IMAGEHuman[i].IsDraw = FALSE;			//最初は描画しない
+		IMAGEHuman[i].IsDraw = FALSE;				//最初は描画しない
+		IMAGEHuman[i].IsContact = FALSE;			//接してない
 	}
+
 	//一定時間で描画する用
 	for (int i = 0; i < 23; i++)  //読み込み
 	{
@@ -835,8 +843,8 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 		//大きさの取得
 		GetGraphSize(Human_Cons[i].Humanimage.handle, &Human_Cons[i].Humanimage.width, &Human_Cons[i].Humanimage.height);
-		Human_Cons[i].IsDraw = FALSE;				//初期値はFALSE
-		Human_Cons[i].IsContact = FALSE;			//初期値はFALSE
+		Human_Cons[i].IsDraw = FALSE;				//最初は描画しない
+		Human_Cons[i].IsContact = FALSE;			//接してない
 	}
 
 	//マップの画像を分割する
@@ -1001,6 +1009,15 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 			{
 				return TRUE;
 			}
+		}
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (MY_CHECK_RECT_COLL(Human, IMAGEHuman[i].Human_Coll) == TRUE)
+		{
+			IMAGEHuman[i].IsContact = TRUE;
+			return TRUE;
 		}
 	}
 
