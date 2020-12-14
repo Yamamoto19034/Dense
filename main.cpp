@@ -124,9 +124,8 @@ typedef struct STRUCT_HUMAN_TIME
 	BOOL IsDraw;					//描画できるか否か
 
 	RECT HumanCons_Coll;			//当たり判定
-	iPOINT HumanCons_CollBeforePt;	//当たる前の座標
 
-	BOOL IsContact;
+	BOOL IsContact;					//接しているか否か
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
 
 typedef struct STRUCT_MUSIC
@@ -187,8 +186,7 @@ int CDTimeLimit = 0;			//カウントダウン用の制限時間(CD = Count Down)
 int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
-int ConstantTime = 0;
-int StartTime2 = 0;
+int ConstantTime = 0;			//一定時間用の基準時間
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -221,37 +219,36 @@ iPOINT startPt{ -1,-1 };
 RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 
 //######プロトタイプ宣言######
-VOID MY_FPS_UPDATE(VOID);				//FPS値を計測、更新する
-VOID MY_FPS_DRAW(VOID);					//FPS値を描画する
-VOID MY_FPS_WAIT(VOID);					//FPS値を計測し、待つ
+VOID MY_FPS_UPDATE(VOID);					//FPS値を計測、更新する
+VOID MY_FPS_DRAW(VOID);						//FPS値を描画する
+VOID MY_FPS_WAIT(VOID);						//FPS値を計測し、待つ
 
-VOID MY_ALL_KEYDOWN_UPDATE(VOID);		//キーの入力状態を更新する
-BOOL MY_KEY_DOWN(int);					//キーを押しているか、キーコードで判断する
+VOID MY_ALL_KEYDOWN_UPDATE(VOID);			//キーの入力状態を更新する
+BOOL MY_KEY_DOWN(int);						//キーを押しているか、キーコードで判断する
 
-VOID MY_START(VOID);					//スタート画面
-VOID MY_START_PROC(VOID);				//スタート画面の処理
-VOID MY_START_DRAW(VOID);				//スタート画面の描画
+VOID MY_START(VOID);						//スタート画面
+VOID MY_START_PROC(VOID);					//スタート画面の処理
+VOID MY_START_DRAW(VOID);					//スタート画面の描画
 
-VOID MY_PLAY(VOID);						//プレイ画面
-VOID MY_PLAY_PROC(VOID);				//プレイ画面の処理
-VOID MY_PLAY_DRAW(VOID);				//プレイ画面の描画
+VOID MY_PLAY(VOID);							//プレイ画面
+VOID MY_PLAY_PROC(VOID);					//プレイ画面の処理
+VOID MY_PLAY_DRAW(VOID);					//プレイ画面の描画
 
-VOID MY_END(VOID);						//エンド画面
-VOID MY_END_PROC(VOID);					//エンド画面の処理
-VOID MY_END_DRAW(VOID);					//エンド画面の描画
+VOID MY_END(VOID);							//エンド画面
+VOID MY_END_PROC(VOID);						//エンド画面の処理
+VOID MY_END_DRAW(VOID);						//エンド画面の描画
 
-BOOL MY_LOAD_IMAGE(VOID);				//画像をまとめて読み込む関数
-VOID MY_DELETE_IMAGE(VOID);				//画像をまとめて削除する関数
+BOOL MY_LOAD_IMAGE(VOID);					//画像をまとめて読み込む関数
+VOID MY_DELETE_IMAGE(VOID);					//画像をまとめて削除する関数
 
-BOOL MY_LOAD_MUSIC(VOID);				//音楽をまとめて読み込む関数
-VOID MY_DELETE_MUSIC(VOID);				//音楽をまとめて削除する関数
+BOOL MY_LOAD_MUSIC(VOID);					//音楽をまとめて読み込む関数
+VOID MY_DELETE_MUSIC(VOID);					//音楽をまとめて削除する関数
 
-BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
-int MY_CHECK_HUMAN_PLAYER_COLL(RECT);	//マップとプレイヤーの当たり判定をする関数
-BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);
-BOOL MY_CHECK_RECT_COLL(RECT, RECT);	//領域の当たり判定をする関数
-VOID COLLPROC(VOID);					//当たり判定をする関数				
-VOID HUMANCOLL(VOID);
+BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
+int MY_CHECK_HUMAN_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
+BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);	//人間同士の当たり判定をする関数
+BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
+VOID COLLPROC(VOID);						//当たり判定をする関数				
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -445,10 +442,6 @@ VOID MY_START_PROC(VOID)
 			StopSoundMem(Start_BGM.handle);  //BGMを止める
 		}
 
-		//プレイヤーの中心位置を計算する
-		//player.CenterX = startPt.x;
-		//player.CenterY = startPt.y;
-
 		//プレイヤーの画像の位置を設定する
 		player.image.x = startPt.x;
 		player.image.y = startPt.y;
@@ -486,11 +479,6 @@ VOID MY_START_PROC(VOID)
 
 			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
 			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
-
-			/*Human_Cons[i].HumanCons_Coll.left = Human_Cons[i].Humanimage.x - 5;
-			Human_Cons[i].HumanCons_Coll.top = Human_Cons[i].Humanimage.y - 5;
-			Human_Cons[i].HumanCons_Coll.right = Human_Cons[i].Humanimage.x + IMAGE_HUMAN_WIDTH + 5;
-			Human_Cons[i].HumanCons_Coll.bottom = Human_Cons[i].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;*/
 		}
 
 		return;  //強制的にプレイシーンへ移動する
@@ -605,10 +593,13 @@ VOID MY_PLAY_PROC(VOID)
 		if (NowCount2 - ConstantTime >= EASY)
 		{
 			Human_Cons[TimeDraw].IsDraw = TRUE;		//描画できる
+
+			//当たり判定を設定する
 			Human_Cons[TimeDraw].HumanCons_Coll.left = Human_Cons[TimeDraw].Humanimage.x - 5;
 			Human_Cons[TimeDraw].HumanCons_Coll.top = Human_Cons[TimeDraw].Humanimage.y - 5;
 			Human_Cons[TimeDraw].HumanCons_Coll.right = Human_Cons[TimeDraw].Humanimage.x + IMAGE_HUMAN_WIDTH + 5;
 			Human_Cons[TimeDraw].HumanCons_Coll.bottom = Human_Cons[TimeDraw].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;
+
 			TimeDraw++;								//次の配列に
 			ConstantTime = GetNowCount();			//再度時間を取得してリセット
 		}
@@ -636,7 +627,6 @@ VOID MY_PLAY_PROC(VOID)
 
 		//当たり判定
 		COLLPROC();
-		HUMANCOLL();
 	}
 
 	return;
@@ -670,7 +660,7 @@ VOID MY_PLAY_DRAW(VOID)
 		//制限時間の表示
 		//1000で割って「ミリ秒単位」から「秒単位」に
 		//0 が出てきてしまうので +1する
-		if ((ElaTime / 1000 + 1) <= 3)  //残り 秒は赤字にする
+		if ((ElaTime / 1000 + 1) <= 3)  //残り3秒は赤字にする
 			DrawFormatString(0, 0, GetColor(255, 0, 0), "%d", (ElaTime / 1000) + 1);
 		else
 			DrawFormatString(0, 0, GetColor(255, 255, 255), "%d", (ElaTime / 1000) + 1);
@@ -697,19 +687,18 @@ VOID MY_PLAY_DRAW(VOID)
 		//最初に出現する用
 		for (int i = 0; i < 5; i++)
 		{
-			if(IMAGEHuman[i].IsDraw == TRUE)
+			if(IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
 				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
 		}
 		//一定時間で出現する用
 		for (int i = 0; i < 23; i++)
 		{
-			if (Human_Cons[i].IsDraw == TRUE)
+			if (Human_Cons[i].IsDraw == TRUE)  //描画できるなら
 			{
-				if(Human_Cons[i].IsContact == TRUE)
-					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);
+				if(Human_Cons[i].IsContact == TRUE)  //接しているなら
+					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);  //色を反転させて表示
 				DrawGraph(Human_Cons[i].Humanimage.x, Human_Cons[i].Humanimage.y, Human_Cons[i].Humanimage.handle, TRUE);
-				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-				Human_Cons[i].IsContact = FALSE;
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
 			}
 		}
 
@@ -808,7 +797,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	player.image.x = GAME_WIDTH / 2 - player.image.width / 2;		//X位置を決める
 	player.image.y = GAME_HEIGHT / 2 - player.image.height / 2;		//Y位置を決める
 	//player.CenterX = player.image.x + player.image.width / 2;		//画像の横の中心を探す
-	//player.CenterY = player.image.y + player.image.height / 2;		//画像の縦の中心を探す
+	//player.CenterY = player.image.y + player.image.height / 2;	//画像の縦の中心を探す
 	player.speed = CHARA_SPEED_MIDI;								//スピードを設定
 
 	//↓人間(客)の画像↓
@@ -846,8 +835,8 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 		//大きさの取得
 		GetGraphSize(Human_Cons[i].Humanimage.handle, &Human_Cons[i].Humanimage.width, &Human_Cons[i].Humanimage.height);
-		Human_Cons[i].IsDraw = FALSE;
-		Human_Cons[i].IsContact = FALSE;
+		Human_Cons[i].IsDraw = FALSE;				//初期値はFALSE
+		Human_Cons[i].IsContact = FALSE;			//初期値はFALSE
 	}
 
 	//マップの画像を分割する
@@ -1001,11 +990,12 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 	return 0;
 }
 
+//人間同士の当たり判定
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 {
 	for (int i = 0; i < 23; i++)
 	{
-		if (i != order)
+		if (i != order)  //同じものは当たり判定のチェックをしない
 		{
 			if (MY_CHECK_RECT_COLL(Human, Human_Cons[i].HumanCons_Coll) == TRUE)
 			{
@@ -1060,22 +1050,12 @@ VOID COLLPROC(VOID)
 	player.collBeforePt.x = player.image.x;
 	player.collBeforePt.y = player.image.y;
 
-	return;
-}
-
-VOID HUMANCOLL(VOID)
-{
-	//プレイヤーの当たり判定の設定
-	player.coll.left = player.image.x;
-	player.coll.top = player.image.y;
-	player.coll.right = player.image.x + player.image.width;
-	player.coll.bottom = player.image.y + player.image.height;
-
 	for (int i = 0; i < 23; i++)
 	{
+		//人間同士が当たっていたら
 		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
 		{
-			Human_Cons[i].IsContact = TRUE;
+			Human_Cons[i].IsContact = TRUE;  //接してる
 		}
 	}
 
