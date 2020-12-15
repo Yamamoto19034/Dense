@@ -59,6 +59,7 @@
 //制限時間
 #define TIMELIMIT				60 * 1000		//60秒間
 #define EASY					3 * 1000
+#define CONTACT_TIME			3 * 1000
 
 enum GAME_MAP_KIND
 {
@@ -127,6 +128,10 @@ typedef struct STRUCT_HUMAN_TIME
 	RECT HumanCons_Coll;			//当たり判定
 
 	BOOL IsContact;					//接しているか否か
+
+	int ContactTime = 0;			//接している時間
+
+	BOOL Contact_First = TRUE;		//
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
 
 typedef struct STRUCT_MUSIC
@@ -187,7 +192,7 @@ int CDTimeLimit = 0;			//カウントダウン用の制限時間(CD = Count Down)
 int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
-int ConstantTime = 0;			//一定時間用の基準時間
+int AppeTime = 0;				//一定時間用の基準時間(出現 = Appearance)
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -273,9 +278,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetDrawScreen(DX_SCREEN_BACK);	//Draw系関数は裏画面に描画
 
 	//プレイヤーの最初の位置を、スタート位置にする
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 		{
 			//スタート位置を探す
 			if (mapData[tate][yoko] == s)
@@ -386,14 +391,14 @@ VOID MY_ALL_KEYDOWN_UPDATE(VOID)
 	char TempKey[256];  //一時的に、現在のキーの入力状態を格納する
 
 	//直前のキー入力を取っておく
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 256; ++i)
 	{
 		OldAllKeyState[i] = AllKeyState[i];
 	}
 
 	GetHitKeyStateAll(TempKey);		//全てのキーの入力状態を得る
 
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (TempKey[i] != 0)		//押されているキーのキーコードの押しているとき
 		{
@@ -452,7 +457,7 @@ VOID MY_START_PROC(VOID)
 		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
 
 		//最初に出現する用
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; ++i)
 		{
 			//ここで描画位置を決める
 			int x = GetRand(15);
@@ -473,7 +478,7 @@ VOID MY_START_PROC(VOID)
 			}
 		}
 		//ここで描画位置を決める(一定時間で出現する用)
-		for (int i = 0; i < 23; i++)
+		for (int i = 0; i < 23; ++i)
 		{
 			int x = GetRand(15);
 			int y = GetRand(10);
@@ -559,7 +564,7 @@ VOID MY_PLAY_PROC(VOID)
 		if (ElaTime <= 0)
 		{
 			StartTime = GetNowCount();		//本番に向けて基準時間を取得
-			ConstantTime = GetNowCount();	//本番に向けて基準時間を取得
+			AppeTime = GetNowCount();		//本番に向けて基準時間を取得
 			First_flg = FALSE;				//これ以降はカウントダウンを行わない
 		}
 	}
@@ -568,6 +573,7 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
+		int NowCount3 = GetNowCount();
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -591,7 +597,7 @@ VOID MY_PLAY_PROC(VOID)
 		}
 
 		//一定時間で人間を出現させる処理
-		if (NowCount2 - ConstantTime >= EASY)
+		if (NowCount2 - AppeTime >= EASY)
 		{
 			Human_Cons[TimeDraw].IsDraw = TRUE;		//描画できる
 
@@ -602,7 +608,7 @@ VOID MY_PLAY_PROC(VOID)
 			Human_Cons[TimeDraw].HumanCons_Coll.bottom = Human_Cons[TimeDraw].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;
 
 			TimeDraw++;								//次の配列に
-			ConstantTime = GetNowCount();			//再度時間を取得してリセット
+			AppeTime = GetNowCount();			//再度時間を取得してリセット
 		}
 		//プレイヤーのキー操作(4方向カーソルキーで行う)
 		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
@@ -628,6 +634,23 @@ VOID MY_PLAY_PROC(VOID)
 
 		//当たり判定
 		COLLPROC();
+
+		for (int i = 0; i < 23; ++i)
+		{
+			if (Human_Cons[i].IsContact == TRUE)
+			{
+				if (Human_Cons[i].Contact_First)
+				{
+					Human_Cons[i].ContactTime = GetNowCount();
+					Human_Cons[i].Contact_First = FALSE;
+				}
+				
+				if ((NowCount3 - Human_Cons[i].ContactTime) >= CONTACT_TIME)
+				{
+					GameScene = GAME_SCENE_END;
+				}
+			}
+		}
 	}
 
 	return;
@@ -638,9 +661,9 @@ VOID MY_PLAY_DRAW(VOID)
 {
 	DrawGraph(ImagePlayBG.x, ImagePlayBG.y, ImagePlayBG.handle, TRUE);
 
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 		{
 			DrawGraph(
 				map[tate][yoko].x,
@@ -667,9 +690,9 @@ VOID MY_PLAY_DRAW(VOID)
 			DrawFormatString(0, 0, GetColor(255, 255, 255), "%d", (ElaTime / 1000) + 1);
 
 		//当たり判定の描画(デバッグ用)
-		for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+		for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 		{
-			for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+			for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 			{
 				//壁ならば
 				if (mapData[tate][yoko] == w)
@@ -686,7 +709,7 @@ VOID MY_PLAY_DRAW(VOID)
 
 		//↓人間(客)の描画↓
 		//最初に出現する用
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 5; ++i)
 		{
 			if (IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
 			{
@@ -697,7 +720,7 @@ VOID MY_PLAY_DRAW(VOID)
 			}
 		}
 		//一定時間で出現する用
-		for (int i = 0; i < 23; i++)
+		for (int i = 0; i < 23; ++i)
 		{
 			if (Human_Cons[i].IsDraw == TRUE)  //描画できるなら
 			{
@@ -808,11 +831,11 @@ BOOL MY_LOAD_IMAGE(VOID)
 
 	//↓人間(客)の画像↓
 	//最初に出現する用
-	for (int i = 0; i < 5; i++)  //読み込み
+	for (int i = 0; i < 5; ++i)  //読み込み
 	{
 		strcpy_s(IMAGEHuman[i].image.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 5; ++i)
 	{
 		//ハンドルの取得
 		IMAGEHuman[i].image.handle = LoadGraph(IMAGEHuman[i].image.path);
@@ -828,11 +851,11 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 
 	//一定時間で描画する用
-	for (int i = 0; i < 23; i++)  //読み込み
+	for (int i = 0; i < 23; ++i)  //読み込み
 	{
 		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 23; i++)
+	for (int i = 0; i < 23; ++i)
 	{
 		//ハンドルの取得
 		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
@@ -864,9 +887,9 @@ BOOL MY_LOAD_IMAGE(VOID)
 	//幅と高さを取得
 	GetGraphSize(mapChip.handle[0], &mapChip.width, &mapChip.height);
 
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 		{
 			//マップデータ初期化用に情報をコピー
 			mapDataInit[tate][yoko] = mapData[tate][yoko];
@@ -884,9 +907,9 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 	}
 	//マップの当たり判定を設定する
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 		{
 			//マップの当たり判定を設定
 			mapColl[tate][yoko].left = (yoko + 0) * mapChip.width + 1;
@@ -910,18 +933,18 @@ VOID MY_DELETE_IMAGE(VOID)
 
 	DeleteGraph(ImageHuman.handle);			//人間(客)の削除
 
-	for (int i = 0; i < 5; i++)				//最初に出現する用
+	for (int i = 0; i < 5; ++i)				//最初に出現する用
 	{
 		DeleteGraph(IMAGEHuman[i].image.handle);
 	}
 
-	for (int i = 0; i < 23; i++)			//一定時間で出現する用
+	for (int i = 0; i < 23; ++i)			//一定時間で出現する用
 	{
 		DeleteGraph(Human_Cons[i].Humanimage.handle);
 	}
 
 	//マップチップの削除
-	for (int num = 0; num < MAP_DIV_NUM; num++)
+	for (int num = 0; num < MAP_DIV_NUM; ++num)
 	{
 		DeleteGraph(mapChip.handle[num]);
 	}
@@ -968,9 +991,9 @@ VOID MY_DELETE_MUSIC(VOID)
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT player)
 {
 	//マップの当たり判定を設定する
-	for (int tate = 0; tate < GAME_MAP_TATE_MAX; tate++)
+	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
-		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; yoko++)
+		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
 		{
 			//プレイヤーとマップが当たっているとき
 			if (MY_CHECK_RECT_COLL(player, mapColl[tate][yoko]) == TRUE)
@@ -987,7 +1010,7 @@ BOOL MY_CHECK_MAP_PLAYER_COLL(RECT player)
 //人間とプレイヤーの当たり判定
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 {
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 5; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(player, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
@@ -1002,7 +1025,7 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 {
 	//一定時間で出現する vs 一定時間で出現する
-	for (int i = 0; i < 23; i++)
+	for (int i = 0; i < 23; ++i)
 	{
 		if (i != order)  //同じものは当たり判定のチェックをしない
 		{
@@ -1014,7 +1037,7 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 	}
 
 	//最初に出現する vs 一定時間で出現する
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 5; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(Human, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
@@ -1069,7 +1092,7 @@ VOID COLLPROC(VOID)
 	player.collBeforePt.x = player.image.x;
 	player.collBeforePt.y = player.image.y;
 
-	for (int i = 0; i < 23; i++)
+	for (int i = 0; i < 23; ++i)
 	{
 		//人間同士が当たっていたら
 		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
