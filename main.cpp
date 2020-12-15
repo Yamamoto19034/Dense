@@ -56,10 +56,10 @@
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
 
-//制限時間
-#define TIMELIMIT				60 * 1000		//60秒間
+//時間関連
+#define TIMELIMIT				60 * 1000		//制限時間、60秒間
 #define EASY					3 * 1000
-#define CONTACT_TIME			3 * 1000
+#define CONTACT_TIME			3 * 1000		//接している時間、3秒間
 
 enum GAME_MAP_KIND
 {
@@ -131,7 +131,7 @@ typedef struct STRUCT_HUMAN_TIME
 
 	int ContactTime = 0;			//接している時間
 
-	BOOL Contact_First = TRUE;		//
+	BOOL Contact_First = TRUE;		//基準時間を取得する用
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
 
 typedef struct STRUCT_MUSIC
@@ -573,7 +573,7 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
-		int NowCount3 = GetNowCount();
+		int NowCount3 = GetNowCount();	//人間同士の接している時間用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -635,18 +635,22 @@ VOID MY_PLAY_PROC(VOID)
 		//当たり判定
 		COLLPROC();
 
+		//GAME OVER条件
 		for (int i = 0; i < 23; ++i)
 		{
-			if (Human_Cons[i].IsContact == TRUE)
+			if (Human_Cons[i].IsContact == TRUE)	//接しているなら
 			{
 				if (Human_Cons[i].Contact_First)
 				{
+					//ここでは基準時間を取得
 					Human_Cons[i].ContactTime = GetNowCount();
-					Human_Cons[i].Contact_First = FALSE;
+					Human_Cons[i].Contact_First = FALSE;	//この処理は1回だけ
 				}
 				
+				//人間同士が一定時間、接していたら
 				if ((NowCount3 - Human_Cons[i].ContactTime) >= CONTACT_TIME)
 				{
+					//エンドシーンへ移動する
 					GameScene = GAME_SCENE_END;
 				}
 			}
