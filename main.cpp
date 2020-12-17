@@ -256,8 +256,11 @@ VOID MY_DELETE_MUSIC(VOID);					//音楽をまとめて削除する関数
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);	//人間同士の当たり判定をする関数
+BOOL MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT);	//感染しているプレイヤーと接しているかを判定する関数
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
-VOID COLLPROC(VOID);						//当たり判定をする関数				
+VOID COLLPROC(VOID);						//当たり判定をする関数
+
+VOID PLAYER_ATTACK(VOID);					//プレイヤーの攻撃に関する関数
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -649,6 +652,7 @@ VOID MY_PLAY_PROC(VOID)
 				player.image.x += player.speed;
 		}
 
+		//プレイヤーの攻撃
 		if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
 		{
 			//効果音が流れていないなら
@@ -658,6 +662,9 @@ VOID MY_PLAY_PROC(VOID)
 				ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
 				PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
 			}
+
+			//接してるか確認
+			PLAYER_ATTACK();
 		}
 
 		//当たり判定
@@ -1102,6 +1109,21 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 	return FALSE;
 }
 
+//感染しているプレイヤーと接しているかを判定する関数
+BOOL MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
+{
+	for (int i = 0; i < 23; ++i)
+	{
+		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
 //領域の当たり判定をする関数
 BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
 {
@@ -1152,6 +1174,18 @@ VOID COLLPROC(VOID)
 		{
 			Human_Cons[i].IsContact = TRUE;  //接してる
 		}
+	}
+
+	return;
+}
+
+//プレイヤーの攻撃に関する関数
+VOID PLAYER_ATTACK(VOID)
+{
+	if (MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll) == TRUE)
+	{
+		//デバッグ用(とりあえず人間に触れていたらエンドシーンへ移動する)
+		GameScene = GAME_SCENE_END;
 	}
 
 	return;
