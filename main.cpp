@@ -233,6 +233,7 @@ VOID MY_FPS_WAIT(VOID);						//FPS値を計測し、待つ
 
 VOID MY_ALL_KEYDOWN_UPDATE(VOID);			//キーの入力状態を更新する
 BOOL MY_KEY_DOWN(int);						//キーを押しているか、キーコードで判断する
+BOOL MY_KEY_DOWN_1SECOND(int);				//キーを押しているか(押しっぱなし回避パターン)
 
 VOID MY_START(VOID);						//スタート画面
 VOID MY_START_PROC(VOID);					//スタート画面の処理
@@ -346,7 +347,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	return 0;
 }
 
-//########## FPS値を計測、更新する関数 ##########
+//FPS値を計測、更新する関数
 VOID MY_FPS_UPDATE(VOID)
 {
 	if (CountFps == 0) //1フレーム目なら時刻を記憶
@@ -366,7 +367,7 @@ VOID MY_FPS_UPDATE(VOID)
 	return;
 }
 
-//########## FPS値を描画する関数 ##########
+//FPS値を描画する関数
 VOID MY_FPS_DRAW(VOID)
 {
 	//文字列を描画
@@ -374,7 +375,7 @@ VOID MY_FPS_DRAW(VOID)
 	return;
 }
 
-//########## FPS値を計測し、待つ関数 ##########
+//FPS値を計測し、待つ関数
 VOID MY_FPS_WAIT(VOID)
 {
 	int resultTime = GetNowCount() - StartTimeFps;					//かかった時間
@@ -387,7 +388,7 @@ VOID MY_FPS_WAIT(VOID)
 	return;
 }
 
-//########## キーの入力状態を更新する関数 ##########
+//キーの入力状態を更新する関数
 VOID MY_ALL_KEYDOWN_UPDATE(VOID)
 {
 	char TempKey[256];  //一時的に、現在のキーの入力状態を格納する
@@ -420,6 +421,20 @@ BOOL MY_KEY_DOWN(int KEY_INPUT_)
 {
 	//キーコードのキーを押している時
 	if (AllKeyState[KEY_INPUT_] != 0)
+	{
+		return TRUE;	//キーを押している
+	}
+	else
+	{
+		return FALSE;	//キーを押していない
+	}
+}
+
+//キーを押しているか(押しっぱなし回避パターン)
+BOOL MY_KEY_DOWN_1SECOND(int KEY_INPUT_)
+{
+	//キーコードのキーを押している時
+	if (AllKeyState[KEY_INPUT_] == 1)
 	{
 		return TRUE;	//キーを押している
 	}
@@ -634,6 +649,17 @@ VOID MY_PLAY_PROC(VOID)
 				player.image.x += player.speed;
 		}
 
+		if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
+		{
+			//効果音が流れていないなら
+			if (CheckSoundMem(Mitu_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
+				PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
+			}
+		}
+
 		//当たり判定
 		COLLPROC();
 
@@ -652,6 +678,16 @@ VOID MY_PLAY_PROC(VOID)
 				//人間同士が一定時間、接していたら
 				if ((NowCount3 - Human_Cons[i].ContactTime) >= CONTACT_TIME)
 				{
+					//BGMが流れているなら
+					if (CheckSoundMem(Play_BGM.handle) != 0)
+					{
+						StopSoundMem(Play_BGM.handle);		//BGMを止める
+					}
+
+					//次もカウントダウンを行うため元に戻す
+					First_flg = TRUE;
+					CountDown = TRUE;
+
 					//エンドシーンへ移動する
 					GameScene = GAME_SCENE_END;
 				}
