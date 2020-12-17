@@ -55,6 +55,7 @@
 //音楽のパス
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
+#define SOUND_EFFECT_MITU_PATH	TEXT(".\\MUSIC\\mitudesu.mp3")			//「密です」
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
@@ -184,6 +185,7 @@ CHARA player;					//キャラクター
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
 MUSIC Play_BGM;					//プレイ画面の背景
+MUSIC Mitu_SF;					//「密です」(SF = Sound Effect)
 
 //時間関連
 int StartTime = 0;				//計測開始時間
@@ -979,6 +981,16 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
+	//効果音「密です」
+	strcpy_s(Mitu_SF.path, SOUND_EFFECT_MITU_PATH);
+	Mitu_SF.handle = LoadSoundMem(Mitu_SF.path);
+	if (Mitu_SF.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), SOUND_EFFECT_MITU_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -987,6 +999,7 @@ VOID MY_DELETE_MUSIC(VOID)
 {
 	DeleteSoundMem(Start_BGM.handle);
 	DeleteSoundMem(Play_BGM.handle);
+	DeleteSoundMem(Mitu_SF.handle);
 
 	return;
 }
