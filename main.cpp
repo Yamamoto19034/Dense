@@ -132,7 +132,7 @@ typedef struct STRUCT_HUMAN_TIME
 
 	int ContactTime = 0;			//接している時間
 
-	int NowCount = 0;
+	int NowCount = 0;				//人間同士の接している時間用
 
 	BOOL Contact_First = TRUE;		//基準時間を取得する用
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
@@ -593,7 +593,6 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
-		//int NowCount3 = GetNowCount();	//人間同士の接している時間用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -673,8 +672,10 @@ VOID MY_PLAY_PROC(VOID)
 		//GAME OVER条件
 		for (int i = 0; i < 23; ++i)
 		{
-			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)	//接しているなら
+			//接しているなら 且つ 表示されているなら
+			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
 			{
+				//それぞれで時間を取得する
 				Human_Cons[i].NowCount = GetNowCount();
 
 				if (Human_Cons[i].Contact_First)
@@ -1119,11 +1120,12 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 	{
 		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
 		{
+			//接しているなら
 			if (Human_Cons[i].IsContact == TRUE)
 			{
+				//画面から消す
 				Human_Cons[i].IsContact = FALSE;
 				Human_Cons[i].IsDraw = FALSE;
-				//DeleteGraph(Human_Cons[i].Humanimage.handle);
 			}
 		}
 	}
