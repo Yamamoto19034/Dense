@@ -60,7 +60,7 @@
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
 #define EASY					3 * 1000
-#define CONTACT_TIME			3 * 1000		//接している時間、3秒間
+#define CONTACT_TIME			10 * 1000		//接している時間、3秒間
 
 enum GAME_MAP_KIND
 {
@@ -78,7 +78,7 @@ enum GAME_SCENE {
 
 enum CHARA_SPEED {
 	CHARA_SPEED_LOW = 1,
-	CHARA_SPEED_MIDI = 2,
+	CHARA_SPEED_MIDI = 4,
 	CHARA_SPEED_HIGI = 3,
 };  //キャラクターのスピード
 
@@ -131,6 +131,8 @@ typedef struct STRUCT_HUMAN_TIME
 	BOOL IsContact;					//接しているか否か
 
 	int ContactTime = 0;			//接している時間
+
+	int NowCount = 0;
 
 	BOOL Contact_First = TRUE;		//基準時間を取得する用
 }HUMAN_CONSTANT;  //時間経過で出す用の人間
@@ -256,11 +258,9 @@ VOID MY_DELETE_MUSIC(VOID);					//音楽をまとめて削除する関数
 BOOL MY_CHECK_MAP_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
 int MY_CHECK_HUMAN_PLAYER_COLL(RECT);		//マップとプレイヤーの当たり判定をする関数
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);	//人間同士の当たり判定をする関数
-BOOL MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT);	//感染しているプレイヤーと接しているかを判定する関数
+VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT);	//感染しているプレイヤーと接しているかを判定する関数
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
 VOID COLLPROC(VOID);						//当たり判定をする関数
-
-VOID PLAYER_ATTACK(VOID);					//プレイヤーの攻撃に関する関数
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -593,7 +593,7 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
-		int NowCount3 = GetNowCount();	//人間同士の接している時間用
+		//int NowCount3 = GetNowCount();	//人間同士の接している時間用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -664,7 +664,7 @@ VOID MY_PLAY_PROC(VOID)
 			}
 
 			//接してるか確認
-			PLAYER_ATTACK();
+			MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll);
 		}
 
 		//当たり判定
@@ -675,6 +675,8 @@ VOID MY_PLAY_PROC(VOID)
 		{
 			if (Human_Cons[i].IsContact == TRUE)	//接しているなら
 			{
+				Human_Cons[i].NowCount = GetNowCount();
+
 				if (Human_Cons[i].Contact_First)
 				{
 					//ここでは基準時間を取得
@@ -683,7 +685,7 @@ VOID MY_PLAY_PROC(VOID)
 				}
 				
 				//人間同士が一定時間、接していたら
-				if ((NowCount3 - Human_Cons[i].ContactTime) >= CONTACT_TIME)
+				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= CONTACT_TIME)
 				{
 					//BGMが流れているなら
 					if (CheckSoundMem(Play_BGM.handle) != 0)
@@ -1091,7 +1093,8 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 		{
 			if (MY_CHECK_RECT_COLL(Human, Human_Cons[i].HumanCons_Coll) == TRUE)
 			{
-				return TRUE;
+				if(Human_Cons[i].IsDraw == TRUE)
+					return TRUE;
 			}
 		}
 	}
@@ -1110,17 +1113,22 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 }
 
 //感染しているプレイヤーと接しているかを判定する関数
-BOOL MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
+VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 {
 	for (int i = 0; i < 23; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
 		{
-			return TRUE;
+			if (Human_Cons[i].IsContact == TRUE)
+			{
+				Human_Cons[i].IsContact = FALSE;
+				Human_Cons[i].IsDraw = FALSE;
+				//DeleteGraph(Human_Cons[i].Humanimage.handle);
+			}
 		}
 	}
 
-	return FALSE;
+	return;
 }
 
 
@@ -1174,18 +1182,6 @@ VOID COLLPROC(VOID)
 		{
 			Human_Cons[i].IsContact = TRUE;  //接してる
 		}
-	}
-
-	return;
-}
-
-//プレイヤーの攻撃に関する関数
-VOID PLAYER_ATTACK(VOID)
-{
-	if (MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll) == TRUE)
-	{
-		//デバッグ用(とりあえず人間に触れていたらエンドシーンへ移動する)
-		GameScene = GAME_SCENE_END;
 	}
 
 	return;
