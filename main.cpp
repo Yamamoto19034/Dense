@@ -673,7 +673,7 @@ VOID MY_PLAY_PROC(VOID)
 		//GAME OVERðŒ
 		for (int i = 0; i < 23; ++i)
 		{
-			if (Human_Cons[i].IsContact == TRUE)	//Ú‚µ‚Ä‚¢‚é‚È‚ç
+			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)	//Ú‚µ‚Ä‚¢‚é‚È‚ç
 			{
 				Human_Cons[i].NowCount = GetNowCount();
 
@@ -1123,6 +1123,19 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 			{
 				Human_Cons[i].IsContact = FALSE;
 				Human_Cons[i].IsDraw = FALSE;
+				//DeleteGraph(Human_Cons[i].Humanimage.handle);
+			}
+		}
+	}
+
+	for (int i = 0; i < 5; ++i)
+	{
+		if (MY_CHECK_RECT_COLL(player, IMAGEHuman[i].Human_Coll) == TRUE)
+		{
+			if (IMAGEHuman[i].IsContact == TRUE)
+			{
+				IMAGEHuman[i].IsContact = FALSE;
+				IMAGEHuman[i].IsDraw = FALSE;
 				//DeleteGraph(Human_Cons[i].Humanimage.handle);
 			}
 		}
