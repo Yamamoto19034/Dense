@@ -610,7 +610,7 @@ VOID MY_PLAY_PROC(VOID)
 				StopSoundMem(Play_BGM.handle);		//BGMを止める
 			}
 
-			//次もカウントダウンを行うため元に戻す
+			//初期化する
 			MY_INIT();
 
 			return;
@@ -695,7 +695,7 @@ VOID MY_PLAY_PROC(VOID)
 						StopSoundMem(Play_BGM.handle);		//BGMを止める
 					}
 
-					//次もカウントダウンを行うため元に戻す
+					//初期化する
 					MY_INIT();
 
 					//エンドシーンへ移動する
@@ -1094,7 +1094,7 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 		{
 			if (MY_CHECK_RECT_COLL(Human, Human_Cons[i].HumanCons_Coll) == TRUE)
 			{
-				if(Human_Cons[i].IsDraw == TRUE)
+				if(Human_Cons[i].IsDraw == TRUE)   //描画されているなら
 					return TRUE;
 			}
 		}
@@ -1105,7 +1105,7 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 	{
 		if (MY_CHECK_RECT_COLL(Human, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
-			if (IMAGEHuman[i].IsDraw == TRUE)
+			if (IMAGEHuman[i].IsDraw == TRUE)       //描画されているなら
 			{
 				IMAGEHuman[i].IsContact = TRUE;		//接している
 				return TRUE;
@@ -1123,7 +1123,7 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 	{
 		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
 		{
-			//接しているなら
+			//接しているなら且つ描画されているなら
 			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
 			{
 				//画面から消す
@@ -1133,7 +1133,7 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 		}
 	}
 
-	for (int i = 0; i < 5; ++i)
+	/*for (int i = 0; i < 5; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(player, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
@@ -1143,7 +1143,7 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 				IMAGEHuman[i].IsDraw = FALSE;
 			}
 		}
-	}
+	}*/
 
 	return;
 }
@@ -1197,7 +1197,7 @@ VOID COLLPROC(VOID)
 		//人間同士が当たっていたら
 		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
 		{
-			if(Human_Cons[i].IsDraw == TRUE)
+			if(Human_Cons[i].IsDraw == TRUE)     //描画されているなら
 				Human_Cons[i].IsContact = TRUE;  //接してる
 		}
 	}
@@ -1205,6 +1205,7 @@ VOID COLLPROC(VOID)
 	return;
 }
 
+//初期化する関数
 VOID MY_INIT(VOID)
 {
 	/*for (int i = 0; i < 5; ++i)
@@ -1220,6 +1221,7 @@ VOID MY_INIT(VOID)
 	for (int i = 0; i < 20; ++i) 
 	{
 		Human_Cons[i].Contact_First = TRUE;
+		//全て非表示に
 		Human_Cons[i].IsContact = FALSE;
 		Human_Cons[i].IsDraw = FALSE;
 	}
