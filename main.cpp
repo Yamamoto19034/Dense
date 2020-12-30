@@ -179,7 +179,7 @@ IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
-HUMAN_CONSTANT Human_Cons[25];	//一定時間ごとに出現する用の人間を配列で管理
+HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
 int TimeDraw = 0;				//Human_Consの配列の添え字
 
 CHARA player;					//キャラクター
@@ -261,6 +261,8 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT, int);	//人間同士の当たり判定をする関数
 VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT);	//感染しているプレイヤーと接しているかを判定する関数
 BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
 VOID COLLPROC(VOID);						//当たり判定をする関数
+
+VOID MY_INIT(VOID);							//初期化する関数
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -477,28 +479,28 @@ VOID MY_START_PROC(VOID)
 		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
 
 		//最初に出現する用
-		for (int i = 0; i < 5; ++i)
-		{
-			//ここで描画位置を決める
-			int x = GetRand(15);
-			int y = GetRand(10);
+		//for (int i = 0; i < 5; ++i)
+		//{
+		//	//ここで描画位置を決める
+		//	int x = GetRand(15);
+		//	int y = GetRand(10);
 
-			//座標位置が通路なら(壁とスタート位置には描画しない)
-			if (mapData[x][y] == t)
-			{
-				IMAGEHuman[i].IsDraw = TRUE;					//表示OK
-				IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
-				IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
+		//	//座標位置が通路なら(壁とスタート位置には描画しない)
+		//	if (mapData[x][y] == t)
+		//	{
+		//		IMAGEHuman[i].IsDraw = TRUE;					//表示OK
+		//		IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
+		//		IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
 
-				//ここで当たり判定の設定をする
-				IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
-				IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
-				IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + IMAGE_HUMAN_WIDTH - 1;
-				IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + IMAGE_HUMAN_HEIGHT - 1;
-			}
-		}
+		//		//ここで当たり判定の設定をする
+		//		IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
+		//		IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
+		//		IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + IMAGE_HUMAN_WIDTH - 1;
+		//		IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + IMAGE_HUMAN_HEIGHT - 1;
+		//	}
+		//}
 		//ここで描画位置を決める(一定時間で出現する用)
-		for (int i = 0; i < 23; ++i)
+		for (int i = 0; i < 20; ++i)
 		{
 			int x = GetRand(15);
 			int y = GetRand(10);
@@ -609,8 +611,7 @@ VOID MY_PLAY_PROC(VOID)
 			}
 
 			//次もカウントダウンを行うため元に戻す
-			First_flg = TRUE;
-			CountDown = TRUE;
+			MY_INIT();
 
 			return;
 		}
@@ -670,7 +671,7 @@ VOID MY_PLAY_PROC(VOID)
 		COLLPROC();
 
 		//GAME OVER条件
-		for (int i = 0; i < 23; ++i)
+		for (int i = 0; i < 20; ++i)
 		{
 			//接しているなら 且つ 表示されているなら
 			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
@@ -695,8 +696,7 @@ VOID MY_PLAY_PROC(VOID)
 					}
 
 					//次もカウントダウンを行うため元に戻す
-					First_flg = TRUE;
-					CountDown = TRUE;
+					MY_INIT();
 
 					//エンドシーンへ移動する
 					GameScene = GAME_SCENE_END;
@@ -761,18 +761,18 @@ VOID MY_PLAY_DRAW(VOID)
 
 		//↓人間(客)の描画↓
 		//最初に出現する用
-		for (int i = 0; i < 5; ++i)
-		{
-			if (IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
-			{
-				if (IMAGEHuman[i].IsContact == TRUE)  //接しているなら
-					SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);  //色を反転させて表示
-				DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
-				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
-			}
-		}
+		//for (int i = 0; i < 5; ++i)
+		//{
+		//	if (IMAGEHuman[i].IsDraw == TRUE)  //描画できるなら
+		//	{
+		//		if (IMAGEHuman[i].IsContact == TRUE)  //接しているなら
+		//			SetDrawBlendMode(DX_BLENDMODE_INVSRC, 255);  //色を反転させて表示
+		//		DrawGraph(IMAGEHuman[i].image.x, IMAGEHuman[i].image.y, IMAGEHuman[i].image.handle, TRUE);
+		//		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
+		//	}
+		//}
 		//一定時間で出現する用
-		for (int i = 0; i < 23; ++i)
+		for (int i = 0; i < 20; ++i)
 		{
 			if (Human_Cons[i].IsDraw == TRUE)  //描画できるなら
 			{
@@ -903,11 +903,11 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 
 	//一定時間で描画する用
-	for (int i = 0; i < 23; ++i)  //読み込み
+	for (int i = 0; i < 20; ++i)  //読み込み
 	{
 		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 23; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		//ハンドルの取得
 		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
@@ -990,7 +990,7 @@ VOID MY_DELETE_IMAGE(VOID)
 		DeleteGraph(IMAGEHuman[i].image.handle);
 	}
 
-	for (int i = 0; i < 23; ++i)			//一定時間で出現する用
+	for (int i = 0; i < 20; ++i)			//一定時間で出現する用
 	{
 		DeleteGraph(Human_Cons[i].Humanimage.handle);
 	}
@@ -1088,7 +1088,7 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 {
 	//一定時間で出現する vs 一定時間で出現する
-	for (int i = 0; i < 23; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		if (i != order)  //同じものは当たり判定のチェックをしない
 		{
@@ -1105,8 +1105,11 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 	{
 		if (MY_CHECK_RECT_COLL(Human, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
-			IMAGEHuman[i].IsContact = TRUE;		//接している
-			return TRUE;
+			if (IMAGEHuman[i].IsDraw == TRUE)
+			{
+				IMAGEHuman[i].IsContact = TRUE;		//接している
+				return TRUE;
+			}
 		}
 	}
 
@@ -1116,12 +1119,12 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 //感染しているプレイヤーと接しているかを判定する関数
 VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 {
-	for (int i = 0; i < 23; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
 		{
 			//接しているなら
-			if (Human_Cons[i].IsContact == TRUE)
+			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
 			{
 				//画面から消す
 				Human_Cons[i].IsContact = FALSE;
@@ -1134,11 +1137,10 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 	{
 		if (MY_CHECK_RECT_COLL(player, IMAGEHuman[i].Human_Coll) == TRUE)
 		{
-			if (IMAGEHuman[i].IsContact == TRUE)
+			if (IMAGEHuman[i].IsContact == TRUE && IMAGEHuman[i].IsDraw == TRUE)
 			{
 				IMAGEHuman[i].IsContact = FALSE;
 				IMAGEHuman[i].IsDraw = FALSE;
-				//DeleteGraph(Human_Cons[i].Humanimage.handle);
 			}
 		}
 	}
@@ -1190,14 +1192,42 @@ VOID COLLPROC(VOID)
 	player.collBeforePt.x = player.image.x;
 	player.collBeforePt.y = player.image.y;
 
-	for (int i = 0; i < 23; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		//人間同士が当たっていたら
 		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
 		{
-			Human_Cons[i].IsContact = TRUE;  //接してる
+			if(Human_Cons[i].IsDraw == TRUE)
+				Human_Cons[i].IsContact = TRUE;  //接してる
 		}
 	}
+
+	return;
+}
+
+VOID MY_INIT(VOID)
+{
+	/*for (int i = 0; i < 5; ++i)
+	{
+		IMAGEHuman[i].IsContact = FALSE;
+		IMAGEHuman[i].IsDraw = FALSE;
+		IMAGEHuman[i].Human_Coll.left = 0;
+		IMAGEHuman[i].Human_Coll.top = 0;
+		IMAGEHuman[i].Human_Coll.right = 0;
+		IMAGEHuman[i].Human_Coll.bottom = 0;
+	}*/
+
+	for (int i = 0; i < 20; ++i) 
+	{
+		Human_Cons[i].Contact_First = TRUE;
+		Human_Cons[i].IsContact = FALSE;
+		Human_Cons[i].IsDraw = FALSE;
+	}
+
+	TimeDraw = 0;
+
+	First_flg = TRUE;
+	CountDown = TRUE;
 
 	return;
 }
