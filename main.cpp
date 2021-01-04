@@ -228,6 +228,9 @@ iPOINT startPt{ -1,-1 };
 //マップの当たり判定
 RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 
+//GameClearかGameOverか判定する
+BOOL Jude;
+
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);					//FPS値を計測、更新する
 VOID MY_FPS_DRAW(VOID);						//FPS値を描画する
@@ -554,7 +557,7 @@ VOID MY_PLAY_PROC(VOID)
 		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);		//ループ再生
 	}
 
-	//スペースキー押したら、エンドシーンへ移動する
+	//スペースキー押したら、エンドシーンへ移動する(デバッグ用)
 	if (MY_KEY_DOWN(KEY_INPUT_SPACE) == TRUE)
 	{
 		//BGMが流れているなら
@@ -562,6 +565,9 @@ VOID MY_PLAY_PROC(VOID)
 		{
 			StopSoundMem(Play_BGM.handle);  //BGMを止める
 		}
+
+		MY_INIT();
+		Jude = TRUE;
 
 		//エンドシーンへ移動する
 		GameScene = GAME_SCENE_END;
@@ -612,6 +618,7 @@ VOID MY_PLAY_PROC(VOID)
 
 			//初期化する
 			MY_INIT();
+			Jude = TRUE;
 
 			return;
 		}
@@ -697,6 +704,7 @@ VOID MY_PLAY_PROC(VOID)
 
 					//初期化する
 					MY_INIT();
+					Jude = FALSE;
 
 					//エンドシーンへ移動する
 					GameScene = GAME_SCENE_END;
