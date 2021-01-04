@@ -56,6 +56,8 @@
 #define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
 #define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
 #define SOUND_EFFECT_MITU_PATH	TEXT(".\\MUSIC\\mitudesu.mp3")			//「密です」
+#define MUSIC_CLEAR_BGM_PATH	TEXT(".\\MUSIC\\Breakfast.mp3")			//GameClear時のBGM
+#define MUSIC_OVER_BGM_PATH		TEXT(".\\MUSIC\\枯葉色.mp3")			//GameOver時のBGM
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
@@ -81,6 +83,11 @@ enum CHARA_SPEED {
 	CHARA_SPEED_MIDI = 4,
 	CHARA_SPEED_HIGI = 3,
 };  //キャラクターのスピード
+
+enum GAME_JUDE {
+	JUDE_CLEAR,  //成功
+	JUDE_OVER    //失敗
+};  //クリアか失敗か
 
 //int型のPOINT構造体
 typedef struct STRUCT_I_POINT
@@ -188,6 +195,8 @@ CHARA player;					//キャラクター
 MUSIC Start_BGM;				//スタート画面の背景
 MUSIC Play_BGM;					//プレイ画面の背景
 MUSIC Mitu_SF;					//「密です」(SF = Sound Effect)
+MUSIC Clear_BGM;				//GameClear時のBGM
+MUSIC Over_BGM;					//GameOver時のBGM
 
 //時間関連
 int StartTime = 0;				//計測開始時間
@@ -229,7 +238,7 @@ iPOINT startPt{ -1,-1 };
 RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 
 //GameClearかGameOverか判定する
-BOOL Jude;
+int Jude;
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);					//FPS値を計測、更新する
@@ -567,7 +576,7 @@ VOID MY_PLAY_PROC(VOID)
 		}
 
 		MY_INIT();
-		Jude = TRUE;
+		Jude = JUDE_CLEAR;
 
 		//エンドシーンへ移動する
 		GameScene = GAME_SCENE_END;
@@ -618,7 +627,7 @@ VOID MY_PLAY_PROC(VOID)
 
 			//初期化する
 			MY_INIT();
-			Jude = TRUE;
+			Jude = JUDE_CLEAR;
 
 			return;
 		}
@@ -704,7 +713,7 @@ VOID MY_PLAY_PROC(VOID)
 
 					//初期化する
 					MY_INIT();
-					Jude = FALSE;
+					Jude = JUDE_OVER;
 
 					//エンドシーンへ移動する
 					GameScene = GAME_SCENE_END;
@@ -817,6 +826,40 @@ VOID MY_END_PROC(VOID)
 	if (MY_KEY_DOWN(KEY_INPUT_ESCAPE) == TRUE)
 	{
 		GameScene = GAME_SCENE_START;
+
+		//BGMが流れているなら(GameClear)
+		if (CheckSoundMem(Clear_BGM.handle) != 0)
+		{
+			StopSoundMem(Clear_BGM.handle);		//BGMを止める
+		}
+		//BGMが流れているなら(GameOver)
+		if (CheckSoundMem(Over_BGM.handle) != 0)
+		{
+			StopSoundMem(Over_BGM.handle);   //BGMを止める
+		}
+	}
+
+	switch (Jude)
+	{
+	case JUDE_CLEAR:  //クリアパターン
+		//BGMが流れていないなら
+		if (CheckSoundMem(Clear_BGM.handle) == 0)
+		{
+			//BGMの音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Clear_BGM.handle);  //50%の音量にする
+			PlaySoundMem(Clear_BGM.handle, DX_PLAYTYPE_LOOP);		 //バックグラウンド再生
+		}
+		break;
+
+	case JUDE_OVER:  //失敗パターン
+		//BGMが流れていないなら
+		if (CheckSoundMem(Over_BGM.handle) == 0)
+		{
+			//BGMの音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Over_BGM.handle);  //50%の音量にする
+			PlaySoundMem(Over_BGM.handle, DX_PLAYTYPE_LOOP);		//バックグラウンド再生
+		}
+		break;
 	}
 
 	return;
@@ -1045,6 +1088,24 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
+	strcpy_s(Clear_BGM.path, MUSIC_CLEAR_BGM_PATH);
+	Clear_BGM.handle = LoadSoundMem(Clear_BGM.path);
+	if (Clear_BGM.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), MUSIC_CLEAR_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	strcpy_s(Over_BGM.path, MUSIC_OVER_BGM_PATH);
+	Over_BGM.handle = LoadSoundMem(Over_BGM.path);
+	if (Over_BGM.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), MUSIC_OVER_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -1054,6 +1115,8 @@ VOID MY_DELETE_MUSIC(VOID)
 	DeleteSoundMem(Start_BGM.handle);
 	DeleteSoundMem(Play_BGM.handle);
 	DeleteSoundMem(Mitu_SF.handle);
+	DeleteSoundMem(Clear_BGM.handle);
+	DeleteSoundMem(Over_BGM.handle);
 
 	return;
 }
