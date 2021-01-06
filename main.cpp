@@ -29,6 +29,7 @@
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
+#define IMAGE_BG_PATH			TEXT(".\\IMAGE\\BG.png")
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -184,6 +185,7 @@ IMAGE ImageStartBG;				//スタート画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
+IMAGE ImageBG;
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -868,8 +870,10 @@ VOID MY_END_PROC(VOID)
 //エンド画面の描画
 VOID MY_END_DRAW(VOID)
 {
-	DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
+	//DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
 	DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
+
+	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 
 	return;
 }
@@ -1022,6 +1026,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 	}
 
+	//エンド画面の背景
+	strcpy_s(ImageBG.path, IMAGE_BG_PATH);		//パスの設定
+	ImageBG.handle = LoadGraph(ImageBG.path);		//読み込み
+	if (ImageBG.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageBG.handle, &ImageBG.width, &ImageBG.height);	//画像の幅と高さを取得
+	ImageBG.x = GAME_WIDTH / 2 - ImageBG.width / 2;			//X位置を決める
+	ImageBG.y = GAME_HEIGHT / 2 - ImageBG.height / 2;		//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1051,6 +1068,8 @@ VOID MY_DELETE_IMAGE(VOID)
 	{
 		DeleteGraph(mapChip.handle[num]);
 	}
+
+	DeleteGraph(ImageBG.handle);
 
 	return;
 }
