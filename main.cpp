@@ -29,6 +29,8 @@
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
+#define IMAGE_CLEAR_PATH		TEXT(".\\IMAGE\\GameClear.png")			//ゲームクリアロゴ
+#define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -184,6 +186,8 @@ IMAGE ImageBG;					//スタート画面・エンド画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
+IMAGE ImageClear;				//ゲームクリアロゴ
+IMAGE ImageOver;				//ゲームオーバーロゴ
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -873,6 +877,16 @@ VOID MY_END_DRAW(VOID)
 
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 
+	switch (Jude)
+	{
+	case JUDE_CLEAR:
+		DrawGraph(ImageClear.x, ImageClear.y, ImageClear.handle, TRUE);
+		break;
+	case JUDE_OVER:
+		DrawGraph(ImageOver.x, ImageOver.y, ImageOver.handle, TRUE);
+		break;
+	}
+
 	return;
 }
 
@@ -1024,6 +1038,32 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 	}
 
+	//ゲームクリアロゴ
+	strcpy_s(ImageClear.path, IMAGE_CLEAR_PATH);		//パスの設定
+	ImageClear.handle = LoadGraph(ImageClear.path);		//読み込み
+	if (ImageClear.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_CLEAR_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageClear.handle, &ImageClear.width, &ImageClear.height);	//画像の幅と高さを取得
+	ImageClear.x = GAME_WIDTH / 2 - ImageClear.width / 2;			//X位置を決める
+	ImageClear.y = GAME_HEIGHT / 2 - ImageClear.height / 2;			//Y位置を決める
+
+	//ゲームオーバーロゴ
+	strcpy_s(ImageOver.path, IMAGE_OVER_PATH);			//パスの設定
+	ImageOver.handle = LoadGraph(ImageOver.path);		//読み込み
+	if (ImageOver.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_OVER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageOver.handle, &ImageOver.width, &ImageOver.height);	//画像の幅と高さを取得
+	ImageOver.x = GAME_WIDTH / 2 - ImageOver.width / 2;				//X位置を決める
+	ImageOver.y = GAME_HEIGHT / 2 - ImageOver.height / 2;			//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1054,6 +1094,9 @@ VOID MY_DELETE_IMAGE(VOID)
 	{
 		DeleteGraph(mapChip.handle[num]);
 	}
+
+	DeleteGraph(ImageClear.handle);			//ゲームクリアロゴ
+	DeleteGraph(ImageOver.handle);
 
 	return;
 }
