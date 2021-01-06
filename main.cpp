@@ -24,12 +24,11 @@
 #define IMAGE_LOAD_ERR_TITLE	TEXT("画像読み込みエラー")
 
 //画像のパス
-#define IMAGE_START_BG_PATH		TEXT(".\\IMAGE\\BG_start.png")			//スタート画面の背景
+#define IMAGE_BG_PATH			TEXT(".\\IMAGE\\BG.png")				//スタート画面・エンド画面の背景
 #define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")				//タイトルロゴ
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
-#define IMAGE_BG_PATH			TEXT(".\\IMAGE\\BG.png")
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -181,11 +180,10 @@ char OldAllKeyState[256] = { 0 };
 int GameScene;					//ゲームシーンを管理
 
 //画像関連
-IMAGE ImageStartBG;				//スタート画面の背景
+IMAGE ImageBG;					//スタート画面・エンド画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
-IMAGE ImageBG;
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -541,7 +539,7 @@ VOID MY_START_PROC(VOID)
 VOID MY_START_DRAW(VOID)
 {
 	//背景・タイトルを描画
-	DrawGraph(ImageStartBG.x, ImageStartBG.y, ImageStartBG.handle, TRUE);
+	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
 	DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
 
@@ -881,20 +879,20 @@ VOID MY_END_DRAW(VOID)
 //画像をまとめて読み込む関数
 BOOL MY_LOAD_IMAGE(VOID)
 {
-	//スタート画面の背景画像
-	strcpy_s(ImageStartBG.path, IMAGE_START_BG_PATH);		//パスの設定
-	ImageStartBG.handle = LoadGraph(ImageStartBG.path);		//読み込み
-	if (ImageStartBG.handle == -1)
+	//スタート画面・エンド画面の背景
+	strcpy_s(ImageBG.path, IMAGE_BG_PATH);		//パスの設定
+	ImageBG.handle = LoadGraph(ImageBG.path);		//読み込み
+	if (ImageBG.handle == -1)
 	{
 		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), IMAGE_START_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		MessageBox(GetMainWindowHandle(), IMAGE_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
 		return FALSE;
 	}
-	GetGraphSize(ImageStartBG.handle, &ImageStartBG.width, &ImageStartBG.height);	//画像の幅と高さを取得
-	ImageStartBG.x = GAME_WIDTH / 2 - ImageStartBG.width / 2;		//X位置を決める
-	ImageStartBG.y = GAME_HEIGHT / 2 - ImageStartBG.height / 2;		//Y位置を決める
+	GetGraphSize(ImageBG.handle, &ImageBG.width, &ImageBG.height);	//画像の幅と高さを取得
+	ImageBG.x = GAME_WIDTH / 2 - ImageBG.width / 2;			//X位置を決める
+	ImageBG.y = GAME_HEIGHT / 2 - ImageBG.height / 2;		//Y位置を決める
 
-	//タイトルロゴ画像
+	//タイトルの画像
 	strcpy_s(ImageTitle.path, IMAGE_TITLE_PATH);		//パスの設定
 	ImageTitle.handle = LoadGraph(ImageTitle.path);		//読み込み
 	if (ImageTitle.handle == -1)
@@ -905,7 +903,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
-	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;			//Y位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;		//Y位置を決める
 
 	//プレイ画面の背景画像
 	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
@@ -1026,26 +1024,14 @@ BOOL MY_LOAD_IMAGE(VOID)
 		}
 	}
 
-	//エンド画面の背景
-	strcpy_s(ImageBG.path, IMAGE_BG_PATH);		//パスの設定
-	ImageBG.handle = LoadGraph(ImageBG.path);		//読み込み
-	if (ImageBG.handle == -1)
-	{
-		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), IMAGE_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
-		return FALSE;
-	}
-	GetGraphSize(ImageBG.handle, &ImageBG.width, &ImageBG.height);	//画像の幅と高さを取得
-	ImageBG.x = GAME_WIDTH / 2 - ImageBG.width / 2;			//X位置を決める
-	ImageBG.y = GAME_HEIGHT / 2 - ImageBG.height / 2;		//Y位置を決める
-
 	return TRUE;
 }
 
 //画像をまとめて削除する関数
 VOID MY_DELETE_IMAGE(VOID)
 {
-	DeleteGraph(ImageStartBG.handle);		//スタート画面の背景
+	DeleteGraph(ImageBG.handle);			//スタート画面・エンド画面の背景
+
 	DeleteGraph(ImageTitle.handle);			//タイトルロゴ
 	DeleteGraph(ImagePlayBG.handle);		//プレイ画面の背景
 
@@ -1068,8 +1054,6 @@ VOID MY_DELETE_IMAGE(VOID)
 	{
 		DeleteGraph(mapChip.handle[num]);
 	}
-
-	DeleteGraph(ImageBG.handle);
 
 	return;
 }
