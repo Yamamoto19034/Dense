@@ -822,23 +822,6 @@ VOID MY_END(VOID)
 //エンド画面の処理
 VOID MY_END_PROC(VOID)
 {
-	//エスケープキー押したら、スタートシーンへ移動する
-	if (MY_KEY_DOWN(KEY_INPUT_ESCAPE) == TRUE)
-	{
-		GameScene = GAME_SCENE_START;
-
-		//BGMが流れているなら(GameClear)
-		if (CheckSoundMem(Clear_BGM.handle) != 0)
-		{
-			StopSoundMem(Clear_BGM.handle);		//BGMを止める
-		}
-		//BGMが流れているなら(GameOver)
-		if (CheckSoundMem(Over_BGM.handle) != 0)
-		{
-			StopSoundMem(Over_BGM.handle);   //BGMを止める
-		}
-	}
-
 	switch (Jude)
 	{
 	case JUDE_CLEAR:  //クリアパターン
@@ -860,6 +843,23 @@ VOID MY_END_PROC(VOID)
 			PlaySoundMem(Over_BGM.handle, DX_PLAYTYPE_LOOP);		//バックグラウンド再生
 		}
 		break;
+	}
+
+	//エスケープキー押したら、スタートシーンへ移動する
+	if (MY_KEY_DOWN(KEY_INPUT_ESCAPE) == TRUE)
+	{
+		GameScene = GAME_SCENE_START;
+
+		//BGMが流れているなら(GameClear)
+		if (CheckSoundMem(Clear_BGM.handle) != 0)
+		{
+			StopSoundMem(Clear_BGM.handle);		//BGMを止める
+		}
+		//BGMが流れているなら(GameOver)
+		if (CheckSoundMem(Over_BGM.handle) != 0)
+		{
+			StopSoundMem(Over_BGM.handle);   //BGMを止める
+		}
 	}
 
 	return;
