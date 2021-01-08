@@ -26,6 +26,7 @@
 //画像のパス
 #define IMAGE_BG_PATH			TEXT(".\\IMAGE\\BG.png")				//スタート画面・エンド画面の背景
 #define IMAGE_TITLE_PATH		TEXT(".\\IMAGE\\title.png")				//タイトルロゴ
+#define IMAGE_PUSH_ENTER_PATH	TEXT(".\\IMAGE\\pushenter.png")			//キー操作を促すボタン
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
@@ -184,6 +185,7 @@ int GameScene;					//ゲームシーンを管理
 //画像関連
 IMAGE ImageBG;					//スタート画面・エンド画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
+IMAGE ImagePushEnter;			//キー操作を促すボタン
 IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 IMAGE ImageClear;				//ゲームクリアロゴ
@@ -545,7 +547,8 @@ VOID MY_START_DRAW(VOID)
 	//背景・タイトルを描画
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
-	DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
+	DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
+	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
 
 	return;
 }
@@ -917,7 +920,20 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
-	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;		//Y位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;			//Y位置を決める
+
+	//キー操作を促すボタン(Push Enter Key)
+	strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
+	ImagePushEnter.handle = LoadGraph(ImagePushEnter.path);		//読み込み
+	if (ImagePushEnter.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_PUSH_ENTER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImagePushEnter.handle, &ImagePushEnter.width, &ImagePushEnter.height);	//画像の幅と高さを取得
+	ImagePushEnter.x = GAME_WIDTH / 2 - ImagePushEnter.width / 2;			//X位置を決める
+	ImagePushEnter.y = ImageTitle.y + ImageTitle.height;					//Y位置を決める
 
 	//プレイ画面の背景画像
 	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
@@ -1073,6 +1089,7 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageBG.handle);			//スタート画面・エンド画面の背景
 
 	DeleteGraph(ImageTitle.handle);			//タイトルロゴ
+	DeleteGraph(ImagePushEnter.handle);		//キー操作を促すボタン
 	DeleteGraph(ImagePlayBG.handle);		//プレイ画面の背景
 
 	DeleteGraph(player.image.handle);		//プレイヤー画像
