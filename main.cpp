@@ -201,6 +201,7 @@ int SampleNumFps = GAME_FPS;	//平均をとるサンプル数
 char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
 
+FONT Nikkyou;
 FONT CD_Nikkyou;				//最初のカウントダウン用
 
 int GameScene;					//ゲームシーンを管理
@@ -534,6 +535,20 @@ VOID MY_FONT_UNINSTALL_ONCE(VOID)
 BOOL MY_FONT_CREATE(VOID)
 {
 	//フォントデータを作成
+	strcpy_s(Nikkyou.path, sizeof(Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
+	strcpy_s(Nikkyou.name, sizeof(Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
+	Nikkyou.handle = -1;							//ハンドルを初期化
+	Nikkyou.size = 50;								//サイズ: 50
+	Nikkyou.bold = 1;								//太さ: 1
+	Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;	//アンチエイリアシング付きのフォント
+
+	//フォントハンドル作成
+	Nikkyou.handle = CreateFontToHandle(Nikkyou.name, Nikkyou.size, Nikkyou.bold, Nikkyou.type);
+	//フォントハンドル作成できないとき、エラー
+	if (Nikkyou.handle == -1) { MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_CREATE_ERR_TITLE, MB_OK); return FALSE; }
+
+
+	//フォントデータを作成(カウントダウン用)
 	strcpy_s(CD_Nikkyou.path, sizeof(CD_Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
 	strcpy_s(CD_Nikkyou.name, sizeof(CD_Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
 	CD_Nikkyou.handle = -1;								//ハンドルを初期化
@@ -852,9 +867,9 @@ VOID MY_PLAY_DRAW(VOID)
 		//1000で割って「ミリ秒単位」から「秒単位」に
 		//0 が出てきてしまうので +1する
 		if ((ElaTime / 1000 + 1) <= 3)  //残り3秒は赤字にする
-			DrawFormatString(0, 0, GetColor(255, 0, 0), "%d", (ElaTime / 1000) + 1);
+			DrawFormatStringToHandle(GAME_WIDTH - 70, 0, GetColor(255, 0, 0), Nikkyou.handle, "%d", (ElaTime / 1000) + 1);
 		else
-			DrawFormatString(0, 0, GetColor(255, 255, 255), "%d", (ElaTime / 1000) + 1);
+			DrawFormatStringToHandle(GAME_WIDTH - 70, 0, GetColor(255, 255, 255),  Nikkyou.handle,"%d", (ElaTime / 1000) + 1);
 
 		//当たり判定の描画(デバッグ用)
 		for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
