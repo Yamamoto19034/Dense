@@ -201,7 +201,7 @@ int SampleNumFps = GAME_FPS;	//平均をとるサンプル数
 char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
 
-FONT CD_Nikkyou;
+FONT CD_Nikkyou;				//最初のカウントダウン用
 
 int GameScene;					//ゲームシーンを管理
 
@@ -393,11 +393,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MY_FPS_WAIT();							//FPSの処理(待つ)
 	}
 
-	//画像ハンドルを破棄
-	MY_DELETE_IMAGE();
-
 	//フォントハンドルを破棄
 	MY_FONT_DELETE();
+
+	//画像ハンドルを破棄
+	MY_DELETE_IMAGE();
 
 	//一時的にインストールしたフォントをアンインストール
 	MY_FONT_UNINSTALL_ONCE();
@@ -505,6 +505,57 @@ BOOL MY_KEY_DOWN_1SECOND(int KEY_INPUT_)
 	{
 		return FALSE;	//キーを押していない
 	}
+}
+
+//フォントをこのソフト用に、一時的にインストール
+BOOL MY_FONT_INSTALL_ONCE(VOID)
+{
+	//フォントを一時的に読み込み(WinAPI)
+	if (AddFontResourceEx(FONT_NIKK_PATH, FR_PRIVATE, NULL) == 0)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_INSTALL_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+//フォントをこのソフト用に、一時的にアンインストール
+VOID MY_FONT_UNINSTALL_ONCE(VOID)
+{
+	//一時的に読み込んだフォントを削除(WinAPI)
+	RemoveFontResourceEx(FONT_NIKK_PATH, FR_PRIVATE, NULL);
+
+	return;
+}
+
+//フォントを読み込む関数
+BOOL MY_FONT_CREATE(VOID)
+{
+	//フォントデータを作成
+	strcpy_s(CD_Nikkyou.path, sizeof(CD_Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
+	strcpy_s(CD_Nikkyou.name, sizeof(CD_Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
+	CD_Nikkyou.handle = -1;								//ハンドルを初期化
+	CD_Nikkyou.size = 300;								//サイズ: 300
+	CD_Nikkyou.bold = 5;								//太さ: 5
+	CD_Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;	//アンチエイリアシング付きのフォント
+
+	//フォントハンドル作成
+	CD_Nikkyou.handle = CreateFontToHandle(CD_Nikkyou.name, CD_Nikkyou.size, CD_Nikkyou.bold, CD_Nikkyou.type);
+	//フォントハンドル作成できないとき、エラー
+	if (CD_Nikkyou.handle == -1) { MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_CREATE_ERR_TITLE, MB_OK); return FALSE; }
+
+	return TRUE;
+}
+
+//フォントを削除する関数
+VOID MY_FONT_DELETE(VOID)
+{
+	//フォントデータを削除
+	DeleteFontToHandle(CD_Nikkyou.handle);	//フォントのハンドルを削除
+
+	return;
 }
 
 //スタート画面
@@ -1154,57 +1205,6 @@ VOID MY_DELETE_IMAGE(VOID)
 
 	DeleteGraph(ImageClear.handle);			//ゲームクリアロゴ
 	DeleteGraph(ImageOver.handle);
-
-	return;
-}
-
-//フォントをこのソフト用に、一時的にインストール
-BOOL MY_FONT_INSTALL_ONCE(VOID)
-{
-	//フォントを一時的に読み込み(WinAPI)
-	if (AddFontResourceEx(FONT_NIKK_PATH, FR_PRIVATE, NULL) == 0)
-	{
-		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_INSTALL_ERR_TITLE, MB_OK);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-//フォントをこのソフト用に、一時的にアンインストール
-VOID MY_FONT_UNINSTALL_ONCE(VOID)
-{
-	//一時的に読み込んだフォントを削除(WinAPI)
-	RemoveFontResourceEx(FONT_NIKK_PATH, FR_PRIVATE, NULL);
-
-	return;
-}
-
-//フォントを読み込む関数
-BOOL MY_FONT_CREATE(VOID)
-{
-	//フォントデータを作成
-	strcpy_s(CD_Nikkyou.path, sizeof(CD_Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
-	strcpy_s(CD_Nikkyou.name, sizeof(CD_Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
-	CD_Nikkyou.handle = -1;								//ハンドルを初期化
-	CD_Nikkyou.size = 300;								//サイズ: 300
-	CD_Nikkyou.bold = 5;								//太さ: 5
-	CD_Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;	//アンチエイリアシング付きのフォント
-
-	//フォントハンドル作成
-	CD_Nikkyou.handle = CreateFontToHandle(CD_Nikkyou.name, CD_Nikkyou.size, CD_Nikkyou.bold, CD_Nikkyou.type);
-	//フォントハンドル作成できないとき、エラー
-	if (CD_Nikkyou.handle == -1) { MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_CREATE_ERR_TITLE, MB_OK); return FALSE; }
-
-	return TRUE;
-}
-
-//フォントを削除する関数
-VOID MY_FONT_DELETE(VOID)
-{
-	//フォントデータを削除
-	DeleteFontToHandle(CD_Nikkyou.handle);	//フォントのハンドルを削除
 
 	return;
 }
