@@ -833,7 +833,11 @@ VOID MY_PLAY_PROC(VOID)
 					Human_Cons[i].ContactTime = GetNowCount();
 					Human_Cons[i].Contact_First = FALSE;	//この処理は1回だけ
 				}
-				
+
+				//1秒間毎にスコアが減る
+				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) % 1000 == 0)
+					Score -= 10;
+
 				//人間同士が一定時間、接していたら
 				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= CONTACT_TIME)
 				{
@@ -992,6 +996,9 @@ VOID MY_END_PROC(VOID)
 		{
 			StopSoundMem(Over_BGM.handle);   //BGMを止める
 		}
+
+		//スコアを初期化する
+		Score = 0;
 	}
 
 	return;
