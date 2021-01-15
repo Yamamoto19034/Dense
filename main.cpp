@@ -538,7 +538,7 @@ BOOL MY_FONT_CREATE(VOID)
 	strcpy_s(Nikkyou.path, sizeof(Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
 	strcpy_s(Nikkyou.name, sizeof(Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
 	Nikkyou.handle = -1;							//ハンドルを初期化
-	Nikkyou.size = 50;								//サイズ: 50
+	Nikkyou.size = 35;								//サイズ: 50
 	Nikkyou.bold = 1;								//太さ: 1
 	Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;	//アンチエイリアシング付きのフォント
 
@@ -867,9 +867,9 @@ VOID MY_PLAY_DRAW(VOID)
 		//1000で割って「ミリ秒単位」から「秒単位」に
 		//0 が出てきてしまうので +1する
 		if ((ElaTime / 1000 + 1) <= 3)  //残り3秒は赤字にする
-			DrawFormatStringToHandle(GAME_WIDTH - 70, 0, GetColor(255, 0, 0), Nikkyou.handle, "%d", (ElaTime / 1000) + 1);
+			DrawFormatStringToHandle(GAME_WIDTH - 55, 7, GetColor(255, 0, 0), Nikkyou.handle, "%d", (ElaTime / 1000) + 1);
 		else
-			DrawFormatStringToHandle(GAME_WIDTH - 70, 0, GetColor(255, 255, 255),  Nikkyou.handle,"%d", (ElaTime / 1000) + 1);
+			DrawFormatStringToHandle(GAME_WIDTH - 55, 7, GetColor(255, 255, 255),  Nikkyou.handle,"%d", (ElaTime / 1000) + 1);
 
 		//当たり判定の描画(デバッグ用)
 		for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
