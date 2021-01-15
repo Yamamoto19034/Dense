@@ -201,8 +201,9 @@ int SampleNumFps = GAME_FPS;	//平均をとるサンプル数
 char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
 
-FONT Nikkyou;
+FONT Nikkyou;					//タイマー用
 FONT CD_Nikkyou;				//最初のカウントダウン用
+FONT SCORE_Nikkyou;				//スコア表示用
 
 int GameScene;					//ゲームシーンを管理
 
@@ -564,6 +565,19 @@ BOOL MY_FONT_CREATE(VOID)
 	//フォントハンドル作成できないとき、エラー
 	if (CD_Nikkyou.handle == -1) { MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_CREATE_ERR_TITLE, MB_OK); return FALSE; }
 
+	//フォントデータを作成(スコア表示用)
+	strcpy_s(SCORE_Nikkyou.path, sizeof(SCORE_Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
+	strcpy_s(SCORE_Nikkyou.name, sizeof(SCORE_Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
+	SCORE_Nikkyou.handle = -1;								//ハンドルを初期化
+	SCORE_Nikkyou.size = 60;								//サイズ: 300
+	SCORE_Nikkyou.bold = 2;									//太さ: 5
+	SCORE_Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;		//アンチエイリアシング付きのフォント
+
+	//フォントハンドル作成
+	SCORE_Nikkyou.handle = CreateFontToHandle(SCORE_Nikkyou.name, SCORE_Nikkyou.size, SCORE_Nikkyou.bold, SCORE_Nikkyou.type);
+	//フォントハンドル作成できないとき、エラー
+	if (SCORE_Nikkyou.handle == -1) { MessageBox(GetMainWindowHandle(), FONT_NIKK_NAME, FONT_CREATE_ERR_TITLE, MB_OK); return FALSE; }
+
 	return TRUE;
 }
 
@@ -571,7 +585,9 @@ BOOL MY_FONT_CREATE(VOID)
 VOID MY_FONT_DELETE(VOID)
 {
 	//フォントデータを削除
+	DeleteFontToHandle(Nikkyou.handle);
 	DeleteFontToHandle(CD_Nikkyou.handle);	//フォントのハンドルを削除
+	DeleteFontToHandle(SCORE_Nikkyou.handle);
 
 	return;
 }
@@ -1000,8 +1016,8 @@ VOID MY_END_DRAW(VOID)
 	}
 
 	//スコアの表示
-	DrawStringToHandle(GAME_WIDTH / 2 - 150, ImageClear.y + ImageClear.height + 20, "SCORE: ", GetColor(255, 0, 0), Nikkyou.handle);
-	DrawFormatStringToHandle(GAME_WIDTH / 2, ImageClear.y + ImageClear.height + 20, GetColor(255, 0, 0), Nikkyou.handle, "%d", Score);
+	DrawStringToHandle(GAME_WIDTH / 2 - 250, ImageClear.y + ImageClear.height + 20, "SCORE: ", GetColor(255, 255, 0), SCORE_Nikkyou.handle);
+	DrawFormatStringToHandle(GAME_WIDTH / 2, ImageClear.y + ImageClear.height + 20, GetColor(255, 255, 0), SCORE_Nikkyou.handle, "%d", Score);
 
 	return;
 }
