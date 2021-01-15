@@ -270,6 +270,9 @@ RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 //GameClearかGameOverか判定する
 int Jude;
 
+//スコア設定
+int Score = 0;
+
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);					//FPS値を計測、更新する
 VOID MY_FPS_DRAW(VOID);						//FPS値を描画する
@@ -996,6 +999,10 @@ VOID MY_END_DRAW(VOID)
 		break;
 	}
 
+	//スコアの表示
+	DrawStringToHandle(GAME_WIDTH / 2 - 150, ImageClear.y + ImageClear.height + 20, "SCORE: ", GetColor(255, 0, 0), Nikkyou.handle);
+	DrawFormatStringToHandle(GAME_WIDTH / 2, ImageClear.y + ImageClear.height + 20, GetColor(255, 0, 0), Nikkyou.handle, "%d", Score);
+
 	return;
 }
 
@@ -1369,6 +1376,7 @@ VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 				//画面から消す
 				Human_Cons[i].IsContact = FALSE;
 				Human_Cons[i].IsDraw = FALSE;
+				Score += 100;
 			}
 		}
 	}
