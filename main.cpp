@@ -69,16 +69,17 @@
 #define MUSIC_LOAD_ERR_TITLE	TEXT("音楽読み込みエラー")
 
 //音楽のパス
-#define MUSIC_START_BGM_PATH	TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
-#define MUSIC_PLAY_BGM_PATH		TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
-#define SOUND_EFFECT_MITU_PATH	TEXT(".\\MUSIC\\mitudesu.mp3")			//「密です」
-#define MUSIC_CLEAR_BGM_PATH	TEXT(".\\MUSIC\\Breakfast.mp3")			//GameClear時のBGM
-#define MUSIC_OVER_BGM_PATH		TEXT(".\\MUSIC\\枯葉色.mp3")			//GameOver時のBGM
+#define MUSIC_START_BGM_PATH	 TEXT(".\\MUSIC\\waiting_room.mp3")		//スタート画面のBGM
+#define MUSIC_PLAY_BGM_PATH		 TEXT(".\\MUSIC\\Green_Life.mp3")		//プレイ画面のBGM
+#define SOUND_EFFECT_MITU_PATH	 TEXT(".\\MUSIC\\mitudesu.mp3")			//「密です」
+#define MUSIC_CLEAR_BGM_PATH	 TEXT(".\\MUSIC\\Breakfast.mp3")		//GameClear時のBGM
+#define MUSIC_OVER_BGM_PATH		 TEXT(".\\MUSIC\\枯葉色.mp3")			//GameOver時のBGM
+#define SOUND_EFFECT_BUTTON_PATH TEXT(".\\MUSIC\\decision15.mp3")		//ボタンを押したときの効果音
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
 #define EASY					3 * 1000
-#define CONTACT_TIME			10 * 1000		//接している時間、3秒間
+#define CONTACT_TIME			10 * 1000		//接している時間、10秒間
 
 enum GAME_MAP_KIND
 {
@@ -235,6 +236,7 @@ MUSIC Play_BGM;					//プレイ画面の背景
 MUSIC Mitu_SF;					//「密です」(SF = Sound Effect)
 MUSIC Clear_BGM;				//GameClear時のBGM
 MUSIC Over_BGM;					//GameOver時のBGM
+MUSIC Button_SF;				//ボタンを押したときの効果音
 
 //時間関連
 int StartTime = 0;				//計測開始時間
@@ -635,6 +637,14 @@ VOID MY_START_PROC(VOID)
 			StopSoundMem(Start_BGM.handle);  //BGMを止める
 		}
 
+		//効果音が流れていないなら(ボタン)
+		if (CheckSoundMem(Button_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+		}
+
 		//プレイヤーの画像の位置を設定する
 		player.image.x = startPt.x;
 		player.image.y = startPt.y;
@@ -680,6 +690,14 @@ VOID MY_START_PROC(VOID)
 	//シフトキー(左 or 右)を押したら、説明画面に移動する
 	if (MY_KEY_DOWN(KEY_INPUT_LSHIFT) || MY_KEY_DOWN(KEY_INPUT_RSHIFT) == TRUE)
 	{
+		//効果音が流れていないなら(ボタン)
+		if (CheckSoundMem(Button_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+		}
+
 		GameScene = GAME_SCENE_EXP;
 	}
 
@@ -708,12 +726,20 @@ VOID MY_EXP(VOID)
 	return;
 }
 
-//説明画面の描画
+//説明画面の処理
 VOID MY_EXP_PROC(VOID)
 {
 	//バックスペースキーでスタート画面に戻る
 	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
+		//効果音が流れていないなら(ボタン)
+		if (CheckSoundMem(Button_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+		}
+
 		GameScene = GAME_SCENE_START;
 	}
 
@@ -1034,6 +1060,14 @@ VOID MY_END_PROC(VOID)
 	//バックスペースキー押したら、スタートシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
+		//効果音が流れていないなら(ボタン)
+		if (CheckSoundMem(Button_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+		}
+
 		GameScene = GAME_SCENE_START;
 
 		//BGMが流れているなら(GameClear)
@@ -1352,7 +1386,7 @@ VOID MY_DELETE_IMAGE(VOID)
 //音楽をまとめて読み込む関数
 BOOL MY_LOAD_MUSIC(VOID)
 {
-	//スタート画面の背景音楽
+	//スタート画面のBGM
 	strcpy_s(Start_BGM.path, MUSIC_START_BGM_PATH);
 	Start_BGM.handle = LoadSoundMem(Start_BGM.path);
 	if (Start_BGM.handle == -1)
@@ -1362,7 +1396,7 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
-	//プレイ画面の背景音楽
+	//プレイ画面のBGM
 	strcpy_s(Play_BGM.path, MUSIC_PLAY_BGM_PATH);
 	Play_BGM.handle = LoadSoundMem(Play_BGM.path);
 	if (Play_BGM.handle == -1)
@@ -1382,6 +1416,7 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
+	//クリア時のエンド画面のBGM
 	strcpy_s(Clear_BGM.path, MUSIC_CLEAR_BGM_PATH);
 	Clear_BGM.handle = LoadSoundMem(Clear_BGM.path);
 	if (Clear_BGM.handle == -1)
@@ -1391,12 +1426,23 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
+	//ゲームオーバー時のエンド画面のBGM
 	strcpy_s(Over_BGM.path, MUSIC_OVER_BGM_PATH);
 	Over_BGM.handle = LoadSoundMem(Over_BGM.path);
 	if (Over_BGM.handle == -1)
 	{
 		//エラーメッセージ表示
 		MessageBox(GetMainWindowHandle(), MUSIC_OVER_BGM_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	//ボタンを押したときの効果音
+	strcpy_s(Button_SF.path, SOUND_EFFECT_BUTTON_PATH);
+	Button_SF.handle = LoadSoundMem(Button_SF.path);
+	if (Button_SF.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), SOUND_EFFECT_BUTTON_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
 		return FALSE;
 	}
 
@@ -1411,6 +1457,7 @@ VOID MY_DELETE_MUSIC(VOID)
 	DeleteSoundMem(Mitu_SF.handle);
 	DeleteSoundMem(Clear_BGM.handle);
 	DeleteSoundMem(Over_BGM.handle);
+	DeleteSoundMem(Button_SF.handle);
 
 	return;
 }
