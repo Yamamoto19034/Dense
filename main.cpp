@@ -42,6 +42,7 @@
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
 #define IMAGE_CLEAR_PATH		TEXT(".\\IMAGE\\GameClear.png")			//ゲームクリアロゴ
 #define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
+#define IMAGE_GAME_EXP_PATH		TEXT(".\\IMAGE\\Game_Exp.png")			//ゲーム説明画像
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -89,6 +90,7 @@ enum GAME_SCENE {
 	GAME_SCENE_START,
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
+	GAME_SCENE_EXP,
 };  //ゲームのシーン
 
 enum CHARA_SPEED {
@@ -215,6 +217,7 @@ IMAGE ImagePlayBG;				//プレイ画面の背景
 IMAGE ImageHuman;				//人間(客)の描画
 IMAGE ImageClear;				//ゲームクリアロゴ
 IMAGE ImageOver;				//ゲームオーバーロゴ
+IMAGE ImageGameExp;				//ゲーム説明画像
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -291,6 +294,10 @@ VOID MY_FONT_DELETE(VOID);					//フォントを削除する
 VOID MY_START(VOID);						//スタート画面
 VOID MY_START_PROC(VOID);					//スタート画面の処理
 VOID MY_START_DRAW(VOID);					//スタート画面の描画
+
+VOID MY_EXP();								//説明画面
+VOID MY_EXP_PROC();							//説明画面の処理
+VOID MY_EXP_DRAW();							//説明画面の描画
 
 VOID MY_PLAY(VOID);							//プレイ画面
 VOID MY_PLAY_PROC(VOID);					//プレイ画面の処理
@@ -388,6 +395,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			break;
 		case GAME_SCENE_END:
 			MY_END();
+			break;
+		case GAME_SCENE_EXP:
+			MY_EXP();
 			break;
 		}
 
@@ -604,6 +614,14 @@ VOID MY_START(VOID)
 //スタート画面の処理
 VOID MY_START_PROC(VOID)
 {
+	//BGMが流れていないなら
+	if (CheckSoundMem(Start_BGM.handle) == 0)
+	{
+		//BGMの音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Start_BGM.handle);  //50%の音量にする
+		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);		 //ループ再生
+	}
+
 	//エンターキー押したら、プレイシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_RETURN) == TRUE)
 	{
@@ -655,12 +673,10 @@ VOID MY_START_PROC(VOID)
 		return;  //強制的にプレイシーンへ移動する
 	}
 
-	//BGMが流れていないなら
-	if (CheckSoundMem(Start_BGM.handle) == 0)
+	//シフトキー(左 or 右)を押したら、説明画面に移動する
+	if (MY_KEY_DOWN(KEY_INPUT_LSHIFT) || MY_KEY_DOWN(KEY_INPUT_RSHIFT) == TRUE)
 	{
-		//BGMの音量を下げる
-		ChangeVolumeSoundMem(255 * 50 / 100, Start_BGM.handle);  //50%の音量にする
-		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);		 //ループ再生
+		GameScene = GAME_SCENE_EXP;
 	}
 
 	return;
@@ -674,6 +690,35 @@ VOID MY_START_DRAW(VOID)
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
 	DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
 	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
+
+	return;
+}
+
+//説明画面
+VOID MY_EXP(VOID)
+{
+	MY_EXP_PROC();
+	MY_EXP_DRAW();
+
+	return;
+}
+
+//説明画面の描画
+VOID MY_EXP_PROC(VOID)
+{
+	//バックスペースキーでスタート画面に戻る
+	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
+	{
+		GameScene = GAME_SCENE_START;
+	}
+
+	return;
+}
+
+//説明画像の描画
+VOID MY_EXP_DRAW(VOID)
+{
+	DrawGraph(ImageGameExp.x, ImageGameExp.y, ImageGameExp.handle, TRUE);
 
 	return;
 }
@@ -1090,7 +1135,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	if (player.image.handle == -1)
 	{
 		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), IMAGE_PLAY_BG_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		MessageBox(GetMainWindowHandle(), IMAGE_PLAYER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
 		return FALSE;
 	}
 	GetGraphSize(player.image.handle, &player.image.width, &player.image.height);	//画像の幅と高さを取得
@@ -1216,6 +1261,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageOver.x = GAME_WIDTH / 2 - ImageOver.width / 2;				//X位置を決める
 	ImageOver.y = GAME_HEIGHT / 2 - ImageOver.height / 2;			//Y位置を決める
 
+	//ゲーム説明画像
+	strcpy_s(ImageGameExp.path, IMAGE_GAME_EXP_PATH);			//パスの設定
+	ImageGameExp.handle = LoadGraph(ImageGameExp.path);		//読み込み
+	if (ImageGameExp.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_GAME_EXP_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageGameExp.handle, &ImageGameExp.width, &ImageGameExp.height);	//画像の幅と高さを取得
+	ImageGameExp.x = GAME_WIDTH / 2 - ImageGameExp.width / 2;				//X位置を決める
+	ImageGameExp.y = GAME_HEIGHT / 2 - ImageGameExp.height / 2;			//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1249,7 +1307,8 @@ VOID MY_DELETE_IMAGE(VOID)
 	}
 
 	DeleteGraph(ImageClear.handle);			//ゲームクリアロゴ
-	DeleteGraph(ImageOver.handle);
+	DeleteGraph(ImageOver.handle);			//ゲームオーバーロゴ
+	DeleteGraph(ImageGameExp.handle);		//ゲーム説明画像
 
 	return;
 }
