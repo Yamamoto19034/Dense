@@ -1101,7 +1101,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
-	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2;			//Y位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 30;			//Y位置を決める
 
 	//キー操作を促すボタン(Push Enter Key)
 	strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
@@ -1114,7 +1114,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImagePushEnter.handle, &ImagePushEnter.width, &ImagePushEnter.height);	//画像の幅と高さを取得
 	ImagePushEnter.x = GAME_WIDTH / 2 - ImagePushEnter.width / 2;			//X位置を決める
-	ImagePushEnter.y = ImageTitle.y + ImageTitle.height;					//Y位置を決める
+	ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 20;				//Y位置を決める
 
 	//プレイ画面の背景画像
 	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
