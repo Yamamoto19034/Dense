@@ -44,6 +44,7 @@
 #define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
 #define IMAGE_GAME_EXP_PATH		TEXT(".\\IMAGE\\Game_Exp.png")			//ゲーム説明画像
 #define IMAGE_EXP_BUTTON_PATH	TEXT(".\\IMAGE\\expButton.png")			//説明画面へ促すボタン
+#define IMAGE_BACK_BUTTON_PATH	TEXT(".\\IMAGE\\backButton.png")		//戻るを促すボタン
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -220,6 +221,7 @@ IMAGE ImageClear;				//ゲームクリアロゴ
 IMAGE ImageOver;				//ゲームオーバーロゴ
 IMAGE ImageGameExp;				//ゲーム説明画像
 IMAGE ImageExpButton;			//説明画面へ促すボタン
+IMAGE ImageBackButton;			//戻るを促すボタン
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -1029,8 +1031,8 @@ VOID MY_END_PROC(VOID)
 		break;
 	}
 
-	//エスケープキー押したら、スタートシーンへ移動する
-	if (MY_KEY_DOWN(KEY_INPUT_ESCAPE) == TRUE)
+	//バックスペースキー押したら、スタートシーンへ移動する
+	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
 		GameScene = GAME_SCENE_START;
 
@@ -1055,8 +1057,9 @@ VOID MY_END_PROC(VOID)
 //エンド画面の描画
 VOID MY_END_DRAW(VOID)
 {
+	//デバッグ用
 	//DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
-	DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
+	//DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
 
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 
@@ -1073,6 +1076,7 @@ VOID MY_END_DRAW(VOID)
 	//スコアの表示
 	DrawStringToHandle(GAME_WIDTH / 2 - 250, ImageClear.y + ImageClear.height + 20, "SCORE: ", GetColor(255, 255, 0), SCORE_Nikkyou.handle);
 	DrawFormatStringToHandle(GAME_WIDTH / 2, ImageClear.y + ImageClear.height + 20, GetColor(255, 255, 0), SCORE_Nikkyou.handle, "%d", Score);
+	DrawGraph(ImageBackButton.x, ImageBackButton.y, ImageBackButton.handle, TRUE);
 
 	return;
 }
@@ -1290,6 +1294,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageExpButton.x = GAME_WIDTH - ImageExpButton.width - 20;					//X位置を決める
 	ImageExpButton.y = GAME_HEIGHT - ImageExpButton.height - 20;				//Y位置を決める
 
+	//戻るを促すボタン
+	strcpy_s(ImageBackButton.path, IMAGE_BACK_BUTTON_PATH);			//パスの設定
+	ImageBackButton.handle = LoadGraph(ImageBackButton.path);		//読み込み
+	if (ImageBackButton.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_BACK_BUTTON_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageBackButton.handle, &ImageBackButton.width, &ImageBackButton.height);	//画像の幅と高さを取得
+	ImageBackButton.x = 20;														//X位置を決める
+	ImageBackButton.y = 20;														//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1327,6 +1344,7 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageGameExp.handle);		//ゲーム説明画像
 
 	DeleteGraph(ImageExpButton.handle);		//説明画面へ促すボタン
+	DeleteGraph(ImageBackButton.handle);    //戻るを促すボタン
 
 	return;
 }
