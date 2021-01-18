@@ -43,6 +43,7 @@
 #define IMAGE_CLEAR_PATH		TEXT(".\\IMAGE\\GameClear.png")			//ゲームクリアロゴ
 #define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
 #define IMAGE_GAME_EXP_PATH		TEXT(".\\IMAGE\\Game_Exp.png")			//ゲーム説明画像
+#define IMAGE_EXP_BUTTON_PATH	TEXT(".\\IMAGE\\expButton.png")			//説明画面へ促すボタン
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -218,6 +219,7 @@ IMAGE ImageHuman;				//人間(客)の描画
 IMAGE ImageClear;				//ゲームクリアロゴ
 IMAGE ImageOver;				//ゲームオーバーロゴ
 IMAGE ImageGameExp;				//ゲーム説明画像
+IMAGE ImageExpButton;			//説明画面へ促すボタン
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
@@ -690,6 +692,7 @@ VOID MY_START_DRAW(VOID)
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
 	DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
 	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
+	DrawGraph(ImageExpButton.x, ImageExpButton.y, ImageExpButton.handle, TRUE);
 
 	return;
 }
@@ -1101,7 +1104,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
-	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 30;			//Y位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 40;			//Y位置を決める
 
 	//キー操作を促すボタン(Push Enter Key)
 	strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
@@ -1114,7 +1117,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImagePushEnter.handle, &ImagePushEnter.width, &ImagePushEnter.height);	//画像の幅と高さを取得
 	ImagePushEnter.x = GAME_WIDTH / 2 - ImagePushEnter.width / 2;			//X位置を決める
-	ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 20;				//Y位置を決める
+	ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 30;				//Y位置を決める
 
 	//プレイ画面の背景画像
 	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
@@ -1272,7 +1275,20 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageGameExp.handle, &ImageGameExp.width, &ImageGameExp.height);	//画像の幅と高さを取得
 	ImageGameExp.x = GAME_WIDTH / 2 - ImageGameExp.width / 2;				//X位置を決める
-	ImageGameExp.y = GAME_HEIGHT / 2 - ImageGameExp.height / 2;			//Y位置を決める
+	ImageGameExp.y = GAME_HEIGHT / 2 - ImageGameExp.height / 2;				//Y位置を決める
+
+	//説明画面へ促すボタン
+	strcpy_s(ImageExpButton.path, IMAGE_EXP_BUTTON_PATH);			//パスの設定
+	ImageExpButton.handle = LoadGraph(ImageExpButton.path);		//読み込み
+	if (ImageExpButton.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_EXP_BUTTON_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageExpButton.handle, &ImageExpButton.width, &ImageExpButton.height);	//画像の幅と高さを取得
+	ImageExpButton.x = GAME_WIDTH - ImageExpButton.width - 20;					//X位置を決める
+	ImageExpButton.y = GAME_HEIGHT - ImageExpButton.height - 20;				//Y位置を決める
 
 	return TRUE;
 }
@@ -1309,6 +1325,8 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageClear.handle);			//ゲームクリアロゴ
 	DeleteGraph(ImageOver.handle);			//ゲームオーバーロゴ
 	DeleteGraph(ImageGameExp.handle);		//ゲーム説明画像
+
+	DeleteGraph(ImageExpButton.handle);		//説明画面へ促すボタン
 
 	return;
 }
