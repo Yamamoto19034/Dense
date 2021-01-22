@@ -655,8 +655,8 @@ VOID MY_START_PROC(VOID)
 		player.image.x = startPt.x;
 		player.image.y = startPt.y;
 
-		ImageMitudesu.x = player.image.x + 10;
-		ImageMitudesu.y = player.image.y + 10;
+		ImageMitudesu.x = player.image.x + 50;
+		ImageMitudesu.y = player.image.y - 20;
 
 		//プレイ画面に向けて準備
 		TimeLimit = TIMELIMIT;			//制限時間を設定
@@ -870,7 +870,7 @@ VOID MY_PLAY_PROC(VOID)
 			if (player.image.y >= 0) //画面外でないなら
 			{
 				player.image.y -= player.speed;
-				ImageMitudesu.y = player.image.y;
+				ImageMitudesu.y = player.image.y - 20;
 			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
@@ -878,7 +878,7 @@ VOID MY_PLAY_PROC(VOID)
 			if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
 			{
 				player.image.y += player.speed;
-				ImageMitudesu.y = player.image.y;
+				ImageMitudesu.y = player.image.y - 20;
 			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
@@ -886,7 +886,7 @@ VOID MY_PLAY_PROC(VOID)
 			if (player.image.x >= 0) //画面外でないなら
 			{
 				player.image.x -= player.speed;
-				ImageMitudesu.x = player.image.x;
+				ImageMitudesu.x = player.image.x + 50;
 			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
@@ -894,7 +894,7 @@ VOID MY_PLAY_PROC(VOID)
 			if (player.image.x + player.image.width <= GAME_WIDTH) 
 			{
 				player.image.x += player.speed;
-				ImageMitudesu.x = player.image.x;
+				ImageMitudesu.x = player.image.x + 50;
 			}
 		}
 
