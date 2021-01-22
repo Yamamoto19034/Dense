@@ -39,6 +39,7 @@
 #define IMAGE_PUSH_ENTER_PATH	TEXT(".\\IMAGE\\pushenter.png")			//キー操作を促すボタン
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
+#define IMAGE_MITUDESU_PATH		TEXT(".\\IMAGE\\mitudesu_pic.png")
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
 #define IMAGE_CLEAR_PATH		TEXT(".\\IMAGE\\GameClear.png")			//ゲームクリアロゴ
 #define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
@@ -80,6 +81,7 @@
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
 #define EASY					3 * 1000
 #define CONTACT_TIME			10 * 1000		//接している時間、10秒間
+#define DRAW_TIME				1 * 1000
 
 enum GAME_MAP_KIND
 {
@@ -217,6 +219,7 @@ IMAGE ImageBG;					//スタート画面・エンド画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePushEnter;			//キー操作を促すボタン
 IMAGE ImagePlayBG;				//プレイ画面の背景
+IMAGE ImageMitudesu;
 IMAGE ImageHuman;				//人間(客)の描画
 IMAGE ImageClear;				//ゲームクリアロゴ
 IMAGE ImageOver;				//ゲームオーバーロゴ
@@ -228,7 +231,9 @@ HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
 int TimeDraw = 0;				//Human_Consの配列の添え字
 
-CHARA player;					//キャラクター
+CHARA player;					//プレイヤー
+
+BOOL Mitudesu_Ent = FALSE;
 
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
@@ -246,6 +251,7 @@ int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
 int AppeTime = 0;				//一定時間用の基準時間(出現 = Appearance)
+int DrawTime = 0;
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -301,9 +307,9 @@ VOID MY_START(VOID);						//スタート画面
 VOID MY_START_PROC(VOID);					//スタート画面の処理
 VOID MY_START_DRAW(VOID);					//スタート画面の描画
 
-VOID MY_EXP();								//説明画面
-VOID MY_EXP_PROC();							//説明画面の処理
-VOID MY_EXP_DRAW();							//説明画面の描画
+VOID MY_EXP(VOID);								//説明画面
+VOID MY_EXP_PROC(VOID);							//説明画面の処理
+VOID MY_EXP_DRAW(VOID);							//説明画面の描画
 
 VOID MY_PLAY(VOID);							//プレイ画面
 VOID MY_PLAY_PROC(VOID);					//プレイ画面の処理
@@ -649,6 +655,9 @@ VOID MY_START_PROC(VOID)
 		player.image.x = startPt.x;
 		player.image.y = startPt.y;
 
+		ImageMitudesu.x = player.image.x + 10;
+		ImageMitudesu.y = player.image.y + 10;
+
 		//プレイ画面に向けて準備
 		TimeLimit = TIMELIMIT;			//制限時間を設定
 		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
@@ -818,6 +827,7 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
+		int NowCount3 = GetNowCount();  //描画用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -857,28 +867,42 @@ VOID MY_PLAY_PROC(VOID)
 		//プレイヤーのキー操作(4方向カーソルキーで行う)
 		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
 		{
-			if (player.image.y >= 0)  //画面外でないなら
+			if (player.image.y >= 0) //画面外でないなら
+			{
 				player.image.y -= player.speed;
+				ImageMitudesu.y = player.image.y;
+			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
 		{
 			if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
+			{
 				player.image.y += player.speed;
+				ImageMitudesu.y = player.image.y;
+			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
 		{
-			if (player.image.x >= 0)  //画面外でないなら
+			if (player.image.x >= 0) //画面外でないなら
+			{
 				player.image.x -= player.speed;
+				ImageMitudesu.x = player.image.x;
+			}
 		}
 		if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
 		{
-			if (player.image.x + player.image.width <= GAME_WIDTH)  //画面外でないなら
+			if (player.image.x + player.image.width <= GAME_WIDTH) 
+			{
 				player.image.x += player.speed;
+				ImageMitudesu.x = player.image.x;
+			}
 		}
 
 		//プレイヤーの攻撃
 		if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
 		{
+			DrawTime = GetNowCount();
+
 			//効果音が流れていないなら
 			if (CheckSoundMem(Mitu_SF.handle) == 0)
 			{
@@ -886,10 +910,14 @@ VOID MY_PLAY_PROC(VOID)
 				ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
 				PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
 			}
+			Mitudesu_Ent = TRUE;
 
 			//接してるか確認
 			MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll);
 		}
+
+		if (NowCount3 - DrawTime >= DRAW_TIME)
+			Mitudesu_Ent = FALSE;
 
 		//当たり判定
 		COLLPROC();
@@ -1011,6 +1039,9 @@ VOID MY_PLAY_DRAW(VOID)
 				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
 			}
 		}
+
+		if(Mitudesu_Ent == TRUE)
+			DrawGraph(ImageMitudesu.x, ImageMitudesu.y, ImageMitudesu.handle, TRUE);
 
 		//プレイヤーを描画
 		DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
@@ -1341,6 +1372,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageBackButton.x = 20;														//X位置を決める
 	ImageBackButton.y = 20;														//Y位置を決める
 
+	
+	strcpy_s(ImageMitudesu.path, IMAGE_MITUDESU_PATH);		//パスの設定
+	ImageMitudesu.handle = LoadGraph(ImageMitudesu.path);		//読み込み
+	if (ImageMitudesu.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_MITUDESU_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageMitudesu.handle, &ImageMitudesu.width, &ImageMitudesu.height);	//画像の幅と高さを取得
+	ImageMitudesu.x = GAME_WIDTH / 2 - ImageMitudesu.width / 2;			//X位置を決める
+	ImageMitudesu.y = GAME_HEIGHT / 2 - ImageMitudesu.height / 2;		//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1379,6 +1423,8 @@ VOID MY_DELETE_IMAGE(VOID)
 
 	DeleteGraph(ImageExpButton.handle);		//説明画面へ促すボタン
 	DeleteGraph(ImageBackButton.handle);    //戻るを促すボタン
+
+	DeleteGraph(ImageMitudesu.handle);
 
 	return;
 }
