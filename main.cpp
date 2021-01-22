@@ -39,7 +39,7 @@
 #define IMAGE_PUSH_ENTER_PATH	TEXT(".\\IMAGE\\pushenter.png")			//キー操作を促すボタン
 #define IMAGE_PLAY_BG_PATH		TEXT(".\\IMAGE\\BG_play.png")			//プレイ画面の背景
 #define IMAGE_PLAYER_PATH		TEXT(".\\IMAGE\\Player.png")			//キャラクターの画像
-#define IMAGE_MITUDESU_PATH		TEXT(".\\IMAGE\\mitudesu_pic.png")
+#define IMAGE_MITUDESU_PATH		TEXT(".\\IMAGE\\mitudesu_pic.png")		//「密です」の画像
 #define IMAGE_HUMAN_PATH		TEXT(".\\IMAGE\\human.png")				//人間(客)の描画
 #define IMAGE_CLEAR_PATH		TEXT(".\\IMAGE\\GameClear.png")			//ゲームクリアロゴ
 #define IMAGE_OVER_PATH			TEXT(".\\IMAGE\\GameOver.png")			//ゲームオーバーロゴ
@@ -79,9 +79,9 @@
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
-#define EASY					3 * 1000
+#define EASY					3 * 1000		//人間を出現させる時間間隔
 #define CONTACT_TIME			10 * 1000		//接している時間、10秒間
-#define DRAW_TIME				1 * 1000
+#define DRAW_TIME				0.75 * 1000		//描画する時間
 
 enum GAME_MAP_KIND
 {
@@ -219,7 +219,7 @@ IMAGE ImageBG;					//スタート画面・エンド画面の背景
 IMAGE ImageTitle;				//タイトルロゴ
 IMAGE ImagePushEnter;			//キー操作を促すボタン
 IMAGE ImagePlayBG;				//プレイ画面の背景
-IMAGE ImageMitudesu;
+IMAGE ImageMitudesu;			//「密です」の画像
 IMAGE ImageHuman;				//人間(客)の描画
 IMAGE ImageClear;				//ゲームクリアロゴ
 IMAGE ImageOver;				//ゲームオーバーロゴ
@@ -233,7 +233,7 @@ int TimeDraw = 0;				//Human_Consの配列の添え字
 
 CHARA player;					//プレイヤー
 
-BOOL Mitudesu_Ent = FALSE;
+BOOL Mitudesu_Ent = FALSE;		//描画できるか否か
 
 //音楽関連
 MUSIC Start_BGM;				//スタート画面の背景
@@ -251,7 +251,7 @@ int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
 int AppeTime = 0;				//一定時間用の基準時間(出現 = Appearance)
-int DrawTime = 0;
+int DrawTime = 0;				//描画用の基準時間
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -307,9 +307,9 @@ VOID MY_START(VOID);						//スタート画面
 VOID MY_START_PROC(VOID);					//スタート画面の処理
 VOID MY_START_DRAW(VOID);					//スタート画面の描画
 
-VOID MY_EXP(VOID);								//説明画面
-VOID MY_EXP_PROC(VOID);							//説明画面の処理
-VOID MY_EXP_DRAW(VOID);							//説明画面の描画
+VOID MY_EXP(VOID);							//説明画面
+VOID MY_EXP_PROC(VOID);						//説明画面の処理
+VOID MY_EXP_DRAW(VOID);						//説明画面の描画
 
 VOID MY_PLAY(VOID);							//プレイ画面
 VOID MY_PLAY_PROC(VOID);					//プレイ画面の処理
@@ -386,7 +386,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return -1;
 	}
 
-	//無限ループ
 	while (TRUE)
 	{
 		if (ProcessMessage() != 0) { break; }	//メッセージ処理の結果がエラーのとき、強制終了
@@ -655,6 +654,7 @@ VOID MY_START_PROC(VOID)
 		player.image.x = startPt.x;
 		player.image.y = startPt.y;
 
+		//プレイヤーの位置から「密です」の位置を決める
 		ImageMitudesu.x = player.image.x + 50;
 		ImageMitudesu.y = player.image.y - 20;
 
@@ -864,6 +864,7 @@ VOID MY_PLAY_PROC(VOID)
 			TimeDraw++;								//次の配列に
 			AppeTime = GetNowCount();			//再度時間を取得してリセット
 		}
+
 		//プレイヤーのキー操作(4方向カーソルキーで行う)
 		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
 		{
@@ -901,6 +902,7 @@ VOID MY_PLAY_PROC(VOID)
 		//プレイヤーの攻撃
 		if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
 		{
+			//基準時間を取得する
 			DrawTime = GetNowCount();
 
 			//効果音が流れていないなら
@@ -910,12 +912,14 @@ VOID MY_PLAY_PROC(VOID)
 				ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
 				PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
 			}
-			Mitudesu_Ent = TRUE;
+
+			Mitudesu_Ent = TRUE;	//表示
 
 			//接してるか確認
 			MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll);
 		}
 
+		//描画時間以上たったら非表示
 		if (NowCount3 - DrawTime >= DRAW_TIME)
 			Mitudesu_Ent = FALSE;
 
@@ -1040,6 +1044,7 @@ VOID MY_PLAY_DRAW(VOID)
 			}
 		}
 
+		//「密です」を描画
 		if(Mitudesu_Ent == TRUE)
 			DrawGraph(ImageMitudesu.x, ImageMitudesu.y, ImageMitudesu.handle, TRUE);
 
@@ -1372,7 +1377,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageBackButton.x = 20;														//X位置を決める
 	ImageBackButton.y = 20;														//Y位置を決める
 
-	
+	//「密です」の画像
 	strcpy_s(ImageMitudesu.path, IMAGE_MITUDESU_PATH);		//パスの設定
 	ImageMitudesu.handle = LoadGraph(ImageMitudesu.path);		//読み込み
 	if (ImageMitudesu.handle == -1)
