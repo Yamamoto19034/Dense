@@ -680,13 +680,13 @@ VOID MY_PLAY_DRAW(VOID)
 				//•Ç‚È‚ç‚Î
 				if (mapData[tate][yoko] == w)
 				{
-					DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(0, 0, 255), FALSE);
+					DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(106, 104, 95), FALSE);
 				}
 				//’Ê˜H‚È‚ç‚Î
-				if (mapData[tate][yoko] == t)
+				/*if (mapData[tate][yoko] == t)
 				{
 					DrawBox(mapColl[tate][yoko].left, mapColl[tate][yoko].top, mapColl[tate][yoko].right, mapColl[tate][yoko].bottom, GetColor(255, 0, 255), FALSE);
-				}
+				}*/
 			}
 		}
 
