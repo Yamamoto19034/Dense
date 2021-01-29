@@ -340,7 +340,9 @@ VOID MY_START_DRAW(VOID)
 	//背景・タイトルを描画
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
-	DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
+	//DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
+	DrawGraph(ImageEasyButton.x, ImageEasyButton.y, ImageEasyButton.handle, TRUE);
+	DrawGraph(ImageHardButton.x, ImageHardButton.y, ImageHardButton.handle, TRUE);
 	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
 	DrawGraph(ImageExpButton.x, ImageExpButton.y, ImageExpButton.handle, TRUE);
 
@@ -802,17 +804,17 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 40;			//Y位置を決める
 
 	//キー操作を促すボタン(Push Enter Key)
-	strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
-	ImagePushEnter.handle = LoadGraph(ImagePushEnter.path);		//読み込み
-	if (ImagePushEnter.handle == -1)
-	{
-		//エラーメッセージ表示
-		MessageBox(GetMainWindowHandle(), IMAGE_PUSH_ENTER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
-		return FALSE;
-	}
-	GetGraphSize(ImagePushEnter.handle, &ImagePushEnter.width, &ImagePushEnter.height);	//画像の幅と高さを取得
-	ImagePushEnter.x = GAME_WIDTH / 2 - ImagePushEnter.width / 2;			//X位置を決める
-	ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 30;				//Y位置を決める
+	//strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
+	//ImagePushEnter.handle = LoadGraph(ImagePushEnter.path);		//読み込み
+	//if (ImagePushEnter.handle == -1)
+	//{
+	//	//エラーメッセージ表示
+	//	MessageBox(GetMainWindowHandle(), IMAGE_PUSH_ENTER_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+	//	return FALSE;
+	//}
+	//GetGraphSize(ImagePushEnter.handle, &ImagePushEnter.width, &ImagePushEnter.height);	//画像の幅と高さを取得
+	//ImagePushEnter.x = GAME_WIDTH / 2 - ImagePushEnter.width / 2;			//X位置を決める
+	//ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 30;				//Y位置を決める
 
 	//プレイ画面の背景画像
 	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
@@ -1011,6 +1013,32 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageMitudesu.x = GAME_WIDTH / 2 - ImageMitudesu.width / 2;			//X位置を決める
 	ImageMitudesu.y = GAME_HEIGHT / 2 - ImageMitudesu.height / 2;		//Y位置を決める
 
+	//easyモードを促すボタン
+	strcpy_s(ImageEasyButton.path, IMAGE_EASY_BUTTON_PATH);			//パスの設定
+	ImageEasyButton.handle = LoadGraph(ImageEasyButton.path);		//読み込み
+	if (ImageEasyButton.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_EASY_BUTTON_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageEasyButton.handle, &ImageEasyButton.width, &ImageEasyButton.height);	//画像の幅と高さを取得
+	ImageEasyButton.x = 0;														//X位置を決める
+	ImageEasyButton.y = 0;
+
+	//hardモードを促すボタン
+	strcpy_s(ImageHardButton.path, IMAGE_HARD_BUTTON_PATH);			//パスの設定
+	ImageHardButton.handle = LoadGraph(ImageHardButton.path);		//読み込み
+	if (ImageHardButton.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_HARD_BUTTON_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageHardButton.handle, &ImageHardButton.width, &ImageHardButton.height);	//画像の幅と高さを取得
+	ImageHardButton.x = 100;														//X位置を決める
+	ImageHardButton.y = 100;
+
 	return TRUE;
 }
 
@@ -1020,7 +1048,7 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageBG.handle);			//スタート画面・エンド画面の背景
 
 	DeleteGraph(ImageTitle.handle);			//タイトルロゴ
-	DeleteGraph(ImagePushEnter.handle);		//キー操作を促すボタン
+	//DeleteGraph(ImagePushEnter.handle);		//キー操作を促すボタン
 	DeleteGraph(ImagePlayBG.handle);		//プレイ画面の背景
 
 	DeleteGraph(player.image.handle);		//プレイヤー画像
@@ -1050,7 +1078,10 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageExpButton.handle);		//説明画面へ促すボタン
 	DeleteGraph(ImageBackButton.handle);    //戻るを促すボタン
 
-	DeleteGraph(ImageMitudesu.handle);
+	DeleteGraph(ImageMitudesu.handle);		//「密です」
+
+	DeleteGraph(ImageEasyButton.handle);	//easyモードを促すボタン
+	DeleteGraph(ImageHardButton.handle);	//hardモードを促すボタン
 
 	return;
 }

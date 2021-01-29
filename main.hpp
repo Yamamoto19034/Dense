@@ -45,6 +45,8 @@
 #define IMAGE_GAME_EXP_PATH		TEXT(".\\IMAGE\\Game_Exp.png")			//ゲーム説明画像
 #define IMAGE_EXP_BUTTON_PATH	TEXT(".\\IMAGE\\expButton.png")			//説明画面へ促すボタン
 #define IMAGE_BACK_BUTTON_PATH	TEXT(".\\IMAGE\\backButton.png")		//戻るを促すボタン
+#define IMAGE_EASY_BUTTON_PATH	TEXT(".\\IMAGE\\push1_easy.png")		//easyモードを促すボタン
+#define IMAGE_HARD_BUTTON_PATH	TEXT(".\\IMAGE\\push2_hard.png")		//hardモードを促すボタン
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -227,6 +229,8 @@ IMAGE ImageOver;				//ゲームオーバーロゴ
 IMAGE ImageGameExp;				//ゲーム説明画像
 IMAGE ImageExpButton;			//説明画面へ促すボタン
 IMAGE ImageBackButton;			//戻るを促すボタン
+IMAGE ImageEasyButton;			//easyモードを促すボタン
+IMAGE ImageHardButton;			//hardモードを促すボタン
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[30];	//一定時間ごとに出現する用の人間を配列で管理
