@@ -304,66 +304,17 @@ VOID MY_START_PROC(VOID)
 	}
 
 	//エンターキー押したら、プレイシーンへ移動する
-	if (MY_KEY_DOWN(KEY_INPUT_RETURN) == TRUE)
+	if (MY_KEY_DOWN(KEY_INPUT_1) == TRUE)
 	{
-		//BGMが流れているなら
-		if (CheckSoundMem(Start_BGM.handle) != 0)
-		{
-			StopSoundMem(Start_BGM.handle);  //BGMを止める
-		}
-
-		//効果音が流れていないなら(ボタン)
-		if (CheckSoundMem(Button_SF.handle) == 0)
-		{
-			//効果音の音量を下げる
-			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
-			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
-		}
-
-		//プレイヤーの画像の位置を設定する
-		player.image.x = startPt.x;
-		player.image.y = startPt.y;
-
-		//プレイヤーの位置から「密です」の位置を決める
-		ImageMitudesu.x = player.image.x + 50;
-		ImageMitudesu.y = player.image.y - 20;
-
-		//プレイ画面に向けて準備
-		TimeLimit = TIMELIMIT;			//制限時間を設定
-		GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
-
-		//最初に出現する用
-		//for (int i = 0; i < 5; ++i)
-		//{
-		//	//ここで描画位置を決める
-		//	int x = GetRand(15);
-		//	int y = GetRand(10);
-
-		//	//座標位置が通路なら(壁とスタート位置には描画しない)
-		//	if (mapData[x][y] == t)
-		//	{
-		//		IMAGEHuman[i].IsDraw = TRUE;					//表示OK
-		//		IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
-		//		IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
-
-		//		//ここで当たり判定の設定をする
-		//		IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
-		//		IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
-		//		IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + IMAGE_HUMAN_WIDTH - 1;
-		//		IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + IMAGE_HUMAN_HEIGHT - 1;
-		//	}
-		//}
-		//ここで描画位置を決める(一定時間で出現する用)
-		for (int i = 0; i < 20; ++i)
-		{
-			int x = GetRand(15);
-			int y = GetRand(10);
-
-			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
-			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
-		}
-
-		return;  //強制的にプレイシーンへ移動する
+		GOTO_PLAY();
+		ContactTime = EASY_CONTACT_TIME;
+		AppeTime = EASY_APPE_TIME;
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_2) == TRUE)
+	{
+		GOTO_PLAY();
+		ContactTime = HARD_CONTACT_TIME;
+		AppeTime = HARD_APPE_TIME;
 	}
 
 	//シフトキー(左 or 右)を押したら、説明画面に移動する
@@ -488,7 +439,7 @@ VOID MY_PLAY_PROC(VOID)
 		if (ElaTime <= 0)
 		{
 			StartTime = GetNowCount();		//本番に向けて基準時間を取得
-			AppeTime = GetNowCount();		//本番に向けて基準時間を取得
+			Crit_AppeTime = GetNowCount();	//本番に向けて基準時間を取得
 			First_flg = FALSE;				//これ以降はカウントダウンを行わない
 		}
 	}
@@ -497,7 +448,7 @@ VOID MY_PLAY_PROC(VOID)
 		//現在の時間を取得
 		int NowCount = GetNowCount();	//制限時間用
 		int NowCount2 = GetNowCount();	//一定時間で出現する用
-		int NowCount3 = GetNowCount();  //描画用
+		double NowCount3 = GetNowCount();  //描画用
 
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
@@ -521,7 +472,7 @@ VOID MY_PLAY_PROC(VOID)
 		}
 
 		//一定時間で人間を出現させる処理
-		if (NowCount2 - AppeTime >= EASY)
+		if (NowCount2 - Crit_AppeTime >= AppeTime)
 		{
 			Human_Cons[TimeDraw].IsDraw = TRUE;		//描画できる
 
@@ -532,7 +483,7 @@ VOID MY_PLAY_PROC(VOID)
 			Human_Cons[TimeDraw].HumanCons_Coll.bottom = Human_Cons[TimeDraw].Humanimage.y + IMAGE_HUMAN_HEIGHT + 5;
 
 			TimeDraw++;								//次の配列に
-			AppeTime = GetNowCount();			//再度時間を取得してリセット
+			Crit_AppeTime = GetNowCount();			//再度時間を取得してリセット
 		}
 
 		//プレイヤーのキー操作(4方向カーソルキーで行う)
@@ -597,7 +548,7 @@ VOID MY_PLAY_PROC(VOID)
 		COLLPROC();
 
 		//GAME OVER条件
-		for (int i = 0; i < 20; ++i)
+		for (int i = 0; i < 30; ++i)
 		{
 			//接しているなら 且つ 表示されているなら
 			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
@@ -617,7 +568,7 @@ VOID MY_PLAY_PROC(VOID)
 					Score -= 10;
 
 				//人間同士が一定時間、接していたら
-				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= CONTACT_TIME)
+				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= ContactTime)
 				{
 					//BGMが流れているなら
 					if (CheckSoundMem(Play_BGM.handle) != 0)
@@ -703,7 +654,7 @@ VOID MY_PLAY_DRAW(VOID)
 		//	}
 		//}
 		//一定時間で出現する用
-		for (int i = 0; i < 20; ++i)
+		for (int i = 0; i < 30; ++i)
 		{
 			if (Human_Cons[i].IsDraw == TRUE)  //描画できるなら
 			{
@@ -914,11 +865,11 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 
 	//一定時間で描画する用
-	for (int i = 0; i < 20; ++i)  //読み込み
+	for (int i = 0; i < 30; ++i)  //読み込み
 	{
 		strcpy_s(Human_Cons[i].Humanimage.path, IMAGE_HUMAN_PATH);
 	}
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < 30; ++i)
 	{
 		//ハンドルの取得
 		Human_Cons[i].Humanimage.handle = LoadGraph(Human_Cons[i].Humanimage.path);
@@ -1081,7 +1032,7 @@ VOID MY_DELETE_IMAGE(VOID)
 		DeleteGraph(IMAGEHuman[i].image.handle);
 	}
 
-	for (int i = 0; i < 20; ++i)			//一定時間で出現する用
+	for (int i = 0; i < 30; ++i)			//一定時間で出現する用
 	{
 		DeleteGraph(Human_Cons[i].Humanimage.handle);
 	}
@@ -1221,7 +1172,7 @@ int MY_CHECK_HUMAN_PLAYER_COLL(RECT player)
 BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 {
 	//一定時間で出現する vs 一定時間で出現する
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < 30; ++i)
 	{
 		if (i != order)  //同じものは当たり判定のチェックをしない
 		{
@@ -1252,7 +1203,7 @@ BOOL MY_CHECK_HUMAN_HUMAN_COLL(RECT Human, int order)
 //感染しているプレイヤーと接しているかを判定する関数
 VOID MY_CHECK_INFEHUMAN_PLAYER_COLL(RECT player)
 {
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < 30; ++i)
 	{
 		if (MY_CHECK_RECT_COLL(player, Human_Cons[i].HumanCons_Coll) == TRUE)
 		{
@@ -1326,7 +1277,7 @@ VOID COLLPROC(VOID)
 	player.collBeforePt.x = player.image.x;
 	player.collBeforePt.y = player.image.y;
 
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < 30; ++i)
 	{
 		//人間同士が当たっていたら
 		if (MY_CHECK_HUMAN_HUMAN_COLL(Human_Cons[i].HumanCons_Coll, i) == TRUE)
@@ -1352,7 +1303,7 @@ VOID MY_INIT(VOID)
 		IMAGEHuman[i].Human_Coll.bottom = 0;
 	}*/
 
-	for (int i = 0; i < 20; ++i) 
+	for (int i = 0; i < 30; ++i) 
 	{
 		Human_Cons[i].Contact_First = TRUE;
 		//全て非表示に
@@ -1364,6 +1315,68 @@ VOID MY_INIT(VOID)
 
 	First_flg = TRUE;
 	CountDown = TRUE;
+
+	return;
+}
+
+VOID GOTO_PLAY(VOID)
+{
+	//BGMが流れているなら
+	if (CheckSoundMem(Start_BGM.handle) != 0)
+	{
+		StopSoundMem(Start_BGM.handle);  //BGMを止める
+	}
+
+	//効果音が流れていないなら(ボタン)
+	if (CheckSoundMem(Button_SF.handle) == 0)
+	{
+		//効果音の音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+		PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+	}
+
+	//プレイヤーの画像の位置を設定する
+	player.image.x = startPt.x;
+	player.image.y = startPt.y;
+
+	//プレイヤーの位置から「密です」の位置を決める
+	ImageMitudesu.x = player.image.x + 50;
+	ImageMitudesu.y = player.image.y - 20;
+
+	//プレイ画面に向けて準備
+	TimeLimit = TIMELIMIT;			//制限時間を設定
+	GameScene = GAME_SCENE_PLAY;	//プレイシーンへ移動する
+
+	//最初に出現する用
+	//for (int i = 0; i < 5; ++i)
+	//{
+	//	//ここで描画位置を決める
+	//	int x = GetRand(15);
+	//	int y = GetRand(10);
+
+	//	//座標位置が通路なら(壁とスタート位置には描画しない)
+	//	if (mapData[x][y] == t)
+	//	{
+	//		IMAGEHuman[i].IsDraw = TRUE;					//表示OK
+	//		IMAGEHuman[i].image.x = IMAGE_HUMAN_WIDTH * x;
+	//		IMAGEHuman[i].image.y = IMAGE_HUMAN_HEIGHT * y;
+
+	//		//ここで当たり判定の設定をする
+	//		IMAGEHuman[i].Human_Coll.left = IMAGEHuman[i].image.x + 1;
+	//		IMAGEHuman[i].Human_Coll.top = IMAGEHuman[i].image.y + 1;
+	//		IMAGEHuman[i].Human_Coll.right = IMAGEHuman[i].image.x + IMAGE_HUMAN_WIDTH - 1;
+	//		IMAGEHuman[i].Human_Coll.bottom = IMAGEHuman[i].image.y + IMAGE_HUMAN_HEIGHT - 1;
+	//	}
+	//}
+	//ここで描画位置を決める(一定時間で出現する用)
+	for (int i = 0; i < 30; ++i)
+	{
+		int x = GetRand(15);
+		int y = GetRand(10);
+
+		Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
+		Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
+	}
 
 	return;
 }

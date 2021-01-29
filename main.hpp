@@ -78,8 +78,10 @@
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
-#define EASY					3 * 1000		//人間を出現させる時間間隔
-#define CONTACT_TIME			10 * 1000		//接している時間、10秒間
+#define EASY_APPE_TIME			3 * 1000		//人間を出現させる時間間隔(Easy)
+#define HARD_APPE_TIME			2 * 1000		//人間を出現させる時間間隔(Hard)
+#define EASY_CONTACT_TIME		8 * 1000		//接している時間、8秒間(Easy)
+#define HARD_CONTACT_TIME		10 * 1000		//接している時間、10秒間(Hard)
 #define DRAW_TIME				0.75 * 1000		//描画する時間
 
 enum GAME_MAP_KIND
@@ -227,7 +229,7 @@ IMAGE ImageExpButton;			//説明画面へ促すボタン
 IMAGE ImageBackButton;			//戻るを促すボタン
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
-HUMAN_CONSTANT Human_Cons[20];	//一定時間ごとに出現する用の人間を配列で管理
+HUMAN_CONSTANT Human_Cons[30];	//一定時間ごとに出現する用の人間を配列で管理
 int TimeDraw = 0;				//Human_Consの配列の添え字
 
 CHARA player;					//プレイヤー
@@ -249,8 +251,10 @@ int CDTimeLimit = 0;			//カウントダウン用の制限時間(CD = Count Down)
 int TimeLimit = 0;				//制限時間
 BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
-int AppeTime = 0;				//一定時間用の基準時間(出現 = Appearance)
-int DrawTime = 0;				//描画用の基準時間
+int Crit_AppeTime = 0;			//一定時間用の基準時間(出現 = Appearance)
+int AppeTime = 0;				//何秒で出現させるかを格納する
+double DrawTime = 0;				//描画用の基準時間
+int ContactTime = 0;
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5
@@ -332,3 +336,4 @@ BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
 VOID COLLPROC(VOID);						//当たり判定をする関数
 
 VOID MY_INIT(VOID);							//初期化する関数
+VOID GOTO_PLAY(VOID);						//プレイ画面に行く際の準備
