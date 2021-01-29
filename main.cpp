@@ -303,15 +303,18 @@ VOID MY_START_PROC(VOID)
 		PlaySoundMem(Start_BGM.handle, DX_PLAYTYPE_LOOP);		 //ループ再生
 	}
 
-	//エンターキー押したら、プレイシーンへ移動する
+	//1キーを押したら、プレイシーン(Easyモード)へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_1) == TRUE)
 	{
+		//プレイ画面に向けて準備
 		GOTO_PLAY();
 		ContactTime = EASY_CONTACT_TIME;
 		AppeTime = EASY_APPE_TIME;
 	}
+	//2キーを押したら、プレイシーン(Hardモード)へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_2) == TRUE)
 	{
+		//プレイ画面に向けて準備
 		GOTO_PLAY();
 		ContactTime = HARD_CONTACT_TIME;
 		AppeTime = HARD_APPE_TIME;
@@ -1350,6 +1353,7 @@ VOID MY_INIT(VOID)
 	return;
 }
 
+//プレイ画面に行く際の準備
 VOID GOTO_PLAY(VOID)
 {
 	//BGMが流れているなら
