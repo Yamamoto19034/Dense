@@ -801,7 +801,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageTitle.handle, &ImageTitle.width, &ImageTitle.height);	//画像の幅と高さを取得
 	ImageTitle.x = GAME_WIDTH / 2 - ImageTitle.width / 2;			//X位置を決める
-	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 40;			//Y位置を決める
+	ImageTitle.y = GAME_HEIGHT / 2 - ImageTitle.height / 2 - 115;	//Y位置を決める
 
 	//キー操作を促すボタン(Push Enter Key)
 	//strcpy_s(ImagePushEnter.path, IMAGE_PUSH_ENTER_PATH);		//パスの設定
@@ -1023,8 +1023,8 @@ BOOL MY_LOAD_IMAGE(VOID)
 		return FALSE;
 	}
 	GetGraphSize(ImageEasyButton.handle, &ImageEasyButton.width, &ImageEasyButton.height);	//画像の幅と高さを取得
-	ImageEasyButton.x = 0;														//X位置を決める
-	ImageEasyButton.y = 0;
+	ImageEasyButton.x = GAME_WIDTH / 2 - ImageEasyButton.width / 2;		//X位置を決める
+	ImageEasyButton.y = ImageTitle.y + ImageTitle.height - 20;			//Y位置を決める
 
 	//hardモードを促すボタン
 	strcpy_s(ImageHardButton.path, IMAGE_HARD_BUTTON_PATH);			//パスの設定
@@ -1036,8 +1036,8 @@ BOOL MY_LOAD_IMAGE(VOID)
 		return FALSE;
 	}
 	GetGraphSize(ImageHardButton.handle, &ImageHardButton.width, &ImageHardButton.height);	//画像の幅と高さを取得
-	ImageHardButton.x = 100;														//X位置を決める
-	ImageHardButton.y = 100;
+	ImageHardButton.x = GAME_WIDTH / 2 - ImageHardButton.width / 2;			//X位置を決める
+	ImageHardButton.y = ImageEasyButton.y + ImageEasyButton.height + 20;	//Y位置を決める
 
 	return TRUE;
 }
