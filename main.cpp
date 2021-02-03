@@ -75,16 +75,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//シーンごとに処理を行う
 		switch (GameScene)
 		{
-		case GAME_SCENE_START:
+		case GAME_SCENE_START:		//スタート画面
 			MY_START();
 			break;
-		case GAME_SCENE_PLAY:
+		case GAME_SCENE_PLAY:		//プレイ画面
 			MY_PLAY();
 			break;
-		case GAME_SCENE_END:
+		case GAME_SCENE_END:		//エンド画面
 			MY_END();
 			break;
-		case GAME_SCENE_EXP:
+		case GAME_SCENE_EXP:		//説明画面
 			MY_EXP();
 			break;
 		}
@@ -304,8 +304,8 @@ BOOL MY_FONT_CREATE(VOID)
 	strcpy_s(SCORE_Nikkyou.path, sizeof(SCORE_Nikkyou.path), FONT_NIKK_PATH);	//パスをコピー
 	strcpy_s(SCORE_Nikkyou.name, sizeof(SCORE_Nikkyou.name), FONT_NIKK_NAME);	//フォント名をコピー
 	SCORE_Nikkyou.handle = -1;								//ハンドルを初期化
-	SCORE_Nikkyou.size = 60;								//サイズ: 300
-	SCORE_Nikkyou.bold = 2;									//太さ: 5
+	SCORE_Nikkyou.size = 60;								//サイズ: 60
+	SCORE_Nikkyou.bold = 2;									//太さ: 2
 	SCORE_Nikkyou.type = DX_FONTTYPE_ANTIALIASING_EDGE;		//アンチエイリアシング付きのフォント
 
 	//フォントハンドル作成
@@ -321,7 +321,7 @@ VOID MY_FONT_DELETE(VOID)
 {
 	//フォントデータを削除
 	DeleteFontToHandle(Nikkyou.handle);
-	DeleteFontToHandle(CD_Nikkyou.handle);	//フォントのハンドルを削除
+	DeleteFontToHandle(CD_Nikkyou.handle);
 	DeleteFontToHandle(SCORE_Nikkyou.handle);
 
 	return;
@@ -598,8 +598,10 @@ VOID MY_PLAY_PROC(VOID)
 //プレイ画面の描画
 VOID MY_PLAY_DRAW(VOID)
 {
+	//背景を描画
 	DrawGraph(ImagePlayBG.x, ImagePlayBG.y, ImagePlayBG.handle, TRUE);
 
+	//マップチップ描画
 	for (int tate = 0; tate < GAME_MAP_TATE_MAX; ++tate)
 	{
 		for (int yoko = 0; yoko < GAME_MAP_YOKO_MAX; ++yoko)
@@ -612,6 +614,7 @@ VOID MY_PLAY_DRAW(VOID)
 		}
 	}
 	
+	//デバッグ用
 	//DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
 	if (First_flg)  //最初のカウントダウン
@@ -658,6 +661,7 @@ VOID MY_PLAY_DRAW(VOID)
 		//		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);		 //元に戻す
 		//	}
 		//}
+
 		//一定時間で出現する用
 		for (int i = 0; i < 30; ++i)
 		{
@@ -747,14 +751,17 @@ VOID MY_END_DRAW(VOID)
 	//DrawBox(10, 10, GAME_WIDTH - 10, GAME_HEIGHT - 10, GetColor(0, 0, 255), TRUE);
 	//DrawString(0, 0, "エンド画面(エスケープキーを押してください)", GetColor(255, 255, 255));
 
+	//背景を描画
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 
 	switch (Jude)
 	{
-	case JUDE_CLEAR:
+	case JUDE_CLEAR:	//クリアパターン
+		//クリアロゴ描画
 		DrawGraph(ImageClear.x, ImageClear.y, ImageClear.handle, TRUE);
 		break;
-	case JUDE_OVER:
+	case JUDE_OVER:		//失敗パターン
+		//ゲームオーバーロゴ描画
 		DrawGraph(ImageOver.x, ImageOver.y, ImageOver.handle, TRUE);
 		break;
 	}
@@ -762,6 +769,8 @@ VOID MY_END_DRAW(VOID)
 	//スコアの表示
 	DrawStringToHandle(GAME_WIDTH / 2 - 250, ImageClear.y + ImageClear.height + 20, "SCORE: ", GetColor(255, 255, 0), SCORE_Nikkyou.handle);
 	DrawFormatStringToHandle(GAME_WIDTH / 2, ImageClear.y + ImageClear.height + 20, GetColor(255, 255, 0), SCORE_Nikkyou.handle, "%d", Score);
+
+	//スタート画面へ促すボタン
 	DrawGraph(ImageBackButton.x, ImageBackButton.y, ImageBackButton.handle, TRUE);
 
 	return;
@@ -771,7 +780,7 @@ VOID MY_END_DRAW(VOID)
 BOOL MY_LOAD_IMAGE(VOID)
 {
 	//スタート画面・エンド画面の背景
-	strcpy_s(ImageBG.path, IMAGE_BG_PATH);		//パスの設定
+	strcpy_s(ImageBG.path, IMAGE_BG_PATH);			//パスの設定
 	ImageBG.handle = LoadGraph(ImageBG.path);		//読み込み
 	if (ImageBG.handle == -1)
 	{
@@ -810,7 +819,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	//ImagePushEnter.y = ImageTitle.y + ImageTitle.height - 30;				//Y位置を決める
 
 	//プレイ画面の背景画像
-	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);		//パスの設定
+	strcpy_s(ImagePlayBG.path, IMAGE_PLAY_BG_PATH);			//パスの設定
 	ImagePlayBG.handle = LoadGraph(ImagePlayBG.path);		//読み込み
 	if (ImagePlayBG.handle == -1)
 	{
@@ -823,7 +832,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImagePlayBG.y = GAME_HEIGHT / 2 - ImagePlayBG.height / 2;		//Y位置を決める
 
 	//プレイヤー画像
-	strcpy_s(player.image.path, IMAGE_PLAYER_PATH);		//パスの設定
+	strcpy_s(player.image.path, IMAGE_PLAYER_PATH);			//パスの設定
 	player.image.handle = LoadGraph(player.image.path);		//読み込み
 	if (player.image.handle == -1)
 	{
@@ -956,7 +965,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 
 	//ゲーム説明画像
 	strcpy_s(ImageGameExp.path, IMAGE_GAME_EXP_PATH);			//パスの設定
-	ImageGameExp.handle = LoadGraph(ImageGameExp.path);		//読み込み
+	ImageGameExp.handle = LoadGraph(ImageGameExp.path);			//読み込み
 	if (ImageGameExp.handle == -1)
 	{
 		//エラーメッセージ表示
@@ -969,7 +978,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 
 	//説明画面へ促すボタン
 	strcpy_s(ImageExpButton.path, IMAGE_EXP_BUTTON_PATH);			//パスの設定
-	ImageExpButton.handle = LoadGraph(ImageExpButton.path);		//読み込み
+	ImageExpButton.handle = LoadGraph(ImageExpButton.path);			//読み込み
 	if (ImageExpButton.handle == -1)
 	{
 		//エラーメッセージ表示
@@ -994,7 +1003,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageBackButton.y = 20;														//Y位置を決める
 
 	//「密です」の画像
-	strcpy_s(ImageMitudesu.path, IMAGE_MITUDESU_PATH);		//パスの設定
+	strcpy_s(ImageMitudesu.path, IMAGE_MITUDESU_PATH);			//パスの設定
 	ImageMitudesu.handle = LoadGraph(ImageMitudesu.path);		//読み込み
 	if (ImageMitudesu.handle == -1)
 	{
