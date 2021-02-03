@@ -13,8 +13,6 @@
 
 #define GAME_FPS				60  //FPSの数値
 
-#define MOUSE_BUTTON_CODE		129
-
 //マウスのボタン
 #define MOUSE_BUTTON_CODE		129
 
@@ -271,8 +269,8 @@ BOOL First_flg = TRUE;			//ゲームに入る際のカウントダウンをする
 BOOL CountDown = TRUE;			//カウントダウンをする際の基準時間を確保する
 int Crit_AppeTime = 0;			//一定時間用の基準時間(出現 = Appearance)
 int AppeTime = 0;				//何秒で出現させるかを格納する
-double DrawTime = 0;				//描画用の基準時間
-int ContactTime = 0;
+double DrawTime = 0;			//描画用の基準時間
+int ContactTime = 0;			//人間同士が接する時間
 
 GAME_MAP_KIND mapData[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX]{
 	//  0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5

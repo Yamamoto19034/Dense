@@ -68,7 +68,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		MY_ALL_KEYDOWN_UPDATE();				//押しているキー状態を取得
 
-		MY_MOUSE_UPDATE();
+		MY_MOUSE_UPDATE();						//マウスの状態を取得
 
 		MY_FPS_UPDATE();						//FPSの処理(更新)
 
@@ -210,6 +210,7 @@ BOOL MY_KEY_DOWN_1SECOND(int KEY_INPUT_)
 	}
 }
 
+//マウスの入力情報を更新する
 VOID MY_MOUSE_UPDATE(VOID)
 {
 	//マウスの以前の座標を取得
@@ -380,6 +381,7 @@ VOID MY_START_PROC(VOID)
 	//マウスの左ボタンをクリックしたとき
 	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
 	{
+		//マウスが範囲内にいるなら(Easyモード)
 		if (mouse.Point.x > ImageEasyButton.x && mouse.Point.x < (ImageEasyButton.x + ImageEasyButton.width)
 			&& mouse.Point.y > ImageEasyButton.y && mouse.Point.y < (ImageEasyButton.y + ImageEasyButton.height))
 		{
@@ -395,6 +397,8 @@ VOID MY_START_PROC(VOID)
 			ContactTime = EASY_CONTACT_TIME;
 			AppeTime = EASY_APPE_TIME;
 		}
+
+		//マウスが範囲内にいるなら(Hardモード)
 		if (mouse.Point.x > ImageHardButton.x && mouse.Point.x < (ImageHardButton.x + ImageHardButton.width)
 			&& mouse.Point.y > ImageHardButton.y && mouse.Point.y < (ImageHardButton.y + ImageHardButton.height))
 		{
@@ -410,6 +414,8 @@ VOID MY_START_PROC(VOID)
 			ContactTime = HARD_CONTACT_TIME;
 			AppeTime = HARD_APPE_TIME;
 		}
+
+		//マウスが範囲内にいるなら(説明画面行き)
 		if (mouse.Point.x > ImageExpButton.x && mouse.Point.x < (ImageExpButton.x + ImageExpButton.width)
 			&& mouse.Point.y > ImageExpButton.y && mouse.Point.y < (ImageExpButton.y + ImageExpButton.height))
 		{
@@ -467,6 +473,7 @@ VOID MY_EXP_PROC(VOID)
 		GameScene = GAME_SCENE_START;
 	}
 
+	//マウスが範囲内にいるなら(スタート画面行き)
 	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
 	{
 		if (mouse.Point.x > 55 && mouse.Point.x < 187 && mouse.Point.y > 33 && mouse.Point.y < 165)
@@ -851,6 +858,7 @@ VOID MY_END_PROC(VOID)
 		Score = 0;
 	}
 
+	//マウスが範囲内にいるなら(スタート画面行き)
 	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
 	{
 		if (mouse.Point.x > ImageBackButton.x && mouse.Point.x < (ImageBackButton.x + ImageBackButton.width)
