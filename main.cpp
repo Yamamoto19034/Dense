@@ -15,6 +15,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (DxLib_Init() == -1) { return -1; }	//ＤＸライブラリ初期化処理
 
+	//マウスカーソル表示
+	SetMouseDispFlag(TRUE);
+
+	BOOL IsMouseDownLeft = FALSE;
+
 	//フォントを一時的にインストール
 	if (MY_FONT_INSTALL_ONCE() == FALSE) { return -1; }
 
@@ -62,6 +67,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (ClearDrawScreen() != 0) { break; }	//画面を消去できなかったとき、強制終了
 
 		MY_ALL_KEYDOWN_UPDATE();				//押しているキー状態を取得
+
+		MY_MOUSE_UPDATE();
 
 		MY_FPS_UPDATE();						//FPSの処理(更新)
 
@@ -203,6 +210,42 @@ BOOL MY_KEY_DOWN_1SECOND(int KEY_INPUT_)
 	}
 }
 
+VOID MY_MOUSE_UPDATE(VOID)
+{
+	//マウスの以前の座標を取得
+	mouse.OldPoint = mouse.Point;
+
+	//マウスの以前のボタン入力を取得
+	for (int i = 0; i < MOUSE_BUTTON_CODE; i++) { mouse.OldButton[i] = mouse.Button[i]; }
+
+	//マウスの座標を取得
+	GetMousePoint(&mouse.Point.x, &mouse.Point.y);
+
+	//マウスの押しているボタンを取得
+	mouse.InputValue = GetMouseInput();
+
+	//左ボタンを押しているかチェック
+	if ((mouse.InputValue & MOUSE_INPUT_LEFT) == MOUSE_INPUT_LEFT) { mouse.Button[MOUSE_INPUT_LEFT]++; }		//押している
+	if ((mouse.InputValue & MOUSE_INPUT_LEFT) != MOUSE_INPUT_LEFT) { mouse.Button[MOUSE_INPUT_LEFT] = 0; }		//押していない
+
+	return;
+}
+
+// ボタンを押しているか、マウスーコードで判断する
+//引　数：int：マウスコード：MOUSE_INPUT_???
+BOOL MY_MOUSE_DOWN(int MOUSE_INPUT_)
+{
+	//マウスコードのボタンを押している時
+	if (mouse.Button[MOUSE_INPUT_] != 0)
+	{
+		return TRUE;	//ボタンを押している
+	}
+	else
+	{
+		return FALSE;	//ボタンを押していない
+	}
+}
+
 //フォントをこのソフト用に、一時的にインストール
 BOOL MY_FONT_INSTALL_ONCE(VOID)
 {
@@ -334,6 +377,53 @@ VOID MY_START_PROC(VOID)
 		GameScene = GAME_SCENE_EXP;
 	}
 
+	//マウスの左ボタンをクリックしたとき
+	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
+	{
+		if (mouse.Point.x > ImageEasyButton.x && mouse.Point.x < (ImageEasyButton.x + ImageEasyButton.width)
+			&& mouse.Point.y > ImageEasyButton.y && mouse.Point.y < (ImageEasyButton.y + ImageEasyButton.height))
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+			//プレイ画面に向けて準備
+			GOTO_PLAY();
+			ContactTime = EASY_CONTACT_TIME;
+			AppeTime = EASY_APPE_TIME;
+		}
+		if (mouse.Point.x > ImageHardButton.x && mouse.Point.x < (ImageHardButton.x + ImageHardButton.width)
+			&& mouse.Point.y > ImageHardButton.y && mouse.Point.y < (ImageHardButton.y + ImageHardButton.height))
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+			//プレイ画面に向けて準備
+			GOTO_PLAY();
+			ContactTime = HARD_CONTACT_TIME;
+			AppeTime = HARD_APPE_TIME;
+		}
+		if (mouse.Point.x > ImageExpButton.x && mouse.Point.x < (ImageExpButton.x + ImageExpButton.width)
+			&& mouse.Point.y > ImageExpButton.y && mouse.Point.y < (ImageExpButton.y + ImageExpButton.height))
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+			GameScene = GAME_SCENE_EXP;
+		}
+	}
+
 	return;
 }
 
@@ -374,8 +464,22 @@ VOID MY_EXP_PROC(VOID)
 			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
 			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
 		}
-
 		GameScene = GAME_SCENE_START;
+	}
+
+	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
+	{
+		if (mouse.Point.x > 55 && mouse.Point.x < 187 && mouse.Point.y > 33 && mouse.Point.y < 165)
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+			GameScene = GAME_SCENE_START;
+		}
 	}
 
 	return;
@@ -745,6 +849,37 @@ VOID MY_END_PROC(VOID)
 
 		//スコアを初期化する
 		Score = 0;
+	}
+
+	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
+	{
+		if (mouse.Point.x > ImageBackButton.x && mouse.Point.x < (ImageBackButton.x + ImageBackButton.width)
+			&& mouse.Point.y > ImageBackButton.y && mouse.Point.y < (ImageBackButton.y + ImageBackButton.height))
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+
+			GameScene = GAME_SCENE_START;
+
+			//BGMが流れているなら(GameClear)
+			if (CheckSoundMem(Clear_BGM.handle) != 0)
+			{
+				StopSoundMem(Clear_BGM.handle);		//BGMを止める
+			}
+			//BGMが流れているなら(GameOver)
+			if (CheckSoundMem(Over_BGM.handle) != 0)
+			{
+				StopSoundMem(Over_BGM.handle);   //BGMを止める
+			}
+
+			//スコアを初期化する
+			Score = 0;
+		}
 	}
 
 	return;

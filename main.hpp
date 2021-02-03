@@ -13,6 +13,8 @@
 
 #define GAME_FPS				60  //FPSの数値
 
+#define MOUSE_BUTTON_CODE		129
+
 //マウスのボタン
 #define MOUSE_BUTTON_CODE		129
 
@@ -130,6 +132,15 @@ typedef struct STRUCT_I_POINT
 	int y = -1;		//座標を初期化
 }iPOINT;
 
+typedef struct STRUCT_MOUSE 
+{
+	int InputValue = 0;		//GetMouseInputの値を入れる
+	iPOINT Point;			//マウスの座標が入る
+	iPOINT OldPoint;		//マウスの座標(直前)が入る
+	int OldButton[MOUSE_BUTTON_CODE] = { 0 };   //マウスのボタン入力(直前)が入る
+	int Button[MOUSE_BUTTON_CODE] = { 0 };		//マウスのボタン入力が入る
+}MOUSE;
+
 typedef struct STRUCT_IMAGE
 {
 	char path[PATH_MAX];	//パス
@@ -210,6 +221,9 @@ int SampleNumFps = GAME_FPS;	//平均をとるサンプル数
 //キーボードの入力を取得
 char AllKeyState[256] = { 0 };
 char OldAllKeyState[256] = { 0 };
+
+//マウスの座標を取得
+MOUSE mouse;
 
 FONT Nikkyou;					//タイマー用
 FONT CD_Nikkyou;				//最初のカウントダウン用
@@ -304,6 +318,9 @@ VOID MY_FPS_WAIT(VOID);						//FPS値を計測し、待つ
 VOID MY_ALL_KEYDOWN_UPDATE(VOID);			//キーの入力状態を更新する
 BOOL MY_KEY_DOWN(int);						//キーを押しているか、キーコードで判断する
 BOOL MY_KEY_DOWN_1SECOND(int);				//キーを押しているか(押しっぱなし回避パターン)
+
+VOID MY_MOUSE_UPDATE(VOID);					//マウスの入力情報を更新する
+BOOL MY_MOUSE_DOWN(int);					//ボタンを押しているか、マウスコードで判断する
 
 BOOL MY_FONT_INSTALL_ONCE(VOID);			//フォントをこのソフト用に、一時的にインストール
 VOID MY_FONT_UNINSTALL_ONCE(VOID);			//フォントをこのソフト用に、一時的にアンインストール
