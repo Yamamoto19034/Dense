@@ -463,14 +463,8 @@ VOID MY_EXP_PROC(VOID)
 	//バックスペースキーでスタート画面に戻る
 	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
-		//効果音が流れていないなら(ボタン)
-		if (CheckSoundMem(Button_SF.handle) == 0)
-		{
-			//効果音の音量を下げる
-			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
-			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
-		}
-		GameScene = GAME_SCENE_START;
+		//スタート画面に行く際の処理(説明画面から)
+		GOTO_START_EXP();
 	}
 
 	//マウスが範囲内にいるなら(スタート画面行き)
@@ -478,14 +472,8 @@ VOID MY_EXP_PROC(VOID)
 	{
 		if (mouse.Point.x > 55 && mouse.Point.x < 187 && mouse.Point.y > 33 && mouse.Point.y < 165)
 		{
-			//効果音が流れていないなら(ボタン)
-			if (CheckSoundMem(Button_SF.handle) == 0)
-			{
-				//効果音の音量を下げる
-				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
-				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
-			}
-			GameScene = GAME_SCENE_START;
+			//スタート画面に行く際の処理(説明画面から)
+			GOTO_START_EXP();
 		}
 	}
 
@@ -520,23 +508,23 @@ VOID MY_PLAY_PROC(VOID)
 		PlaySoundMem(Play_BGM.handle, DX_PLAYTYPE_LOOP);		//ループ再生
 	}
 
-	//スペースキー押したら、エンドシーンへ移動する(デバッグ用)
-	if (MY_KEY_DOWN(KEY_INPUT_SPACE) == TRUE)
-	{
-		//BGMが流れているなら
-		if (CheckSoundMem(Play_BGM.handle) != 0)
-		{
-			StopSoundMem(Play_BGM.handle);  //BGMを止める
-		}
+	////スペースキー押したら、エンドシーンへ移動する(デバッグ用)
+	//if (MY_KEY_DOWN(KEY_INPUT_SPACE) == TRUE)
+	//{
+	//	//BGMが流れているなら
+	//	if (CheckSoundMem(Play_BGM.handle) != 0)
+	//	{
+	//		StopSoundMem(Play_BGM.handle);  //BGMを止める
+	//	}
 
-		MY_INIT();
-		Jude = JUDE_CLEAR;
+	//	MY_INIT();
+	//	Jude = JUDE_CLEAR;
 
-		//エンドシーンへ移動する
-		GameScene = GAME_SCENE_END;
+	//	//エンドシーンへ移動する
+	//	GameScene = GAME_SCENE_END;
 
-		return;  //強制的にエンドシーンへ移動する
-	}
+	//	return;  //強制的にエンドシーンへ移動する
+	//}
 
 	if (First_flg)  //まずはカウントダウンからスタート
 	{
@@ -569,23 +557,8 @@ VOID MY_PLAY_PROC(VOID)
 		//制限時間(降順で時間表示) - (現在の時間 - 基準の時間) ← ミリ秒単位
 		ElaTime = TimeLimit - (NowCount - StartTime);
 
-		//経過時間が0秒になったら(・・・3,2,1 で終了させるため <=)
-		if (ElaTime <= 0)
-		{
-			GameScene = GAME_SCENE_END;	//エンドシーンへ移動する
-
-			//BGMが流れているなら
-			if (CheckSoundMem(Play_BGM.handle) != 0)
-			{
-				StopSoundMem(Play_BGM.handle);		//BGMを止める
-			}
-
-			//初期化する
-			MY_INIT();
-			Jude = JUDE_CLEAR;
-
-			return;
-		}
+		//GAME CLEAR条件
+		GAMECLEAR_IF();
 
 		//一定時間で人間を出現させる処理
 		if (NowCount2 - Crit_AppeTime >= AppeTime)
@@ -602,59 +575,11 @@ VOID MY_PLAY_PROC(VOID)
 			Crit_AppeTime = GetNowCount();			//再度時間を取得してリセット
 		}
 
-		//プレイヤーのキー操作(4方向カーソルキーで行う)
-		if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
-		{
-			if (player.image.y >= 0) //画面外でないなら
-			{
-				player.image.y -= player.speed;
-				ImageMitudesu.y = player.image.y - 20;
-			}
-		}
-		if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
-		{
-			if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
-			{
-				player.image.y += player.speed;
-				ImageMitudesu.y = player.image.y - 20;
-			}
-		}
-		if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
-		{
-			if (player.image.x >= 0) //画面外でないなら
-			{
-				player.image.x -= player.speed;
-				ImageMitudesu.x = player.image.x + 50;
-			}
-		}
-		if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
-		{
-			if (player.image.x + player.image.width <= GAME_WIDTH) 
-			{
-				player.image.x += player.speed;
-				ImageMitudesu.x = player.image.x + 50;
-			}
-		}
+		//プレイヤーの移動
+		PLAYER_MOVE();
 
 		//プレイヤーの攻撃
-		if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
-		{
-			//基準時間を取得する
-			DrawTime = GetNowCount();
-
-			//効果音が流れていないなら
-			if (CheckSoundMem(Mitu_SF.handle) == 0)
-			{
-				//効果音の音量を下げる
-				ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
-				PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
-			}
-
-			Mitudesu_Ent = TRUE;	//表示
-
-			//接してるか確認
-			MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll);
-		}
+		PLAYER_ATTACK();
 
 		//描画時間以上たったら非表示
 		if (NowCount3 - DrawTime >= DRAW_TIME)
@@ -664,43 +589,7 @@ VOID MY_PLAY_PROC(VOID)
 		COLLPROC();
 
 		//GAME OVER条件
-		for (int i = 0; i < 30; ++i)
-		{
-			//接しているなら 且つ 表示されているなら
-			if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
-			{
-				//それぞれで時間を取得する
-				Human_Cons[i].NowCount = GetNowCount();
-
-				if (Human_Cons[i].Contact_First)
-				{
-					//ここでは基準時間を取得
-					Human_Cons[i].ContactTime = GetNowCount();
-					Human_Cons[i].Contact_First = FALSE;	//この処理は1回だけ
-				}
-
-				//1秒間毎にスコアが減る
-				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) % 1000 == 0)
-					Score -= 10;
-
-				//人間同士が一定時間、接していたら
-				if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= ContactTime)
-				{
-					//BGMが流れているなら
-					if (CheckSoundMem(Play_BGM.handle) != 0)
-					{
-						StopSoundMem(Play_BGM.handle);		//BGMを止める
-					}
-
-					//初期化する
-					MY_INIT();
-					Jude = JUDE_OVER;
-
-					//エンドシーンへ移動する
-					GameScene = GAME_SCENE_END;
-				}
-			}
-		}
+		GAMEOVER_IF();
 	}
 
 	return;
@@ -723,7 +612,7 @@ VOID MY_PLAY_DRAW(VOID)
 		}
 	}
 	
-	DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
+	//DrawString(0, 0, "プレイ画面(スペースキーを押してください)", GetColor(255, 255, 255));
 
 	if (First_flg)  //最初のカウントダウン
 	{
@@ -789,7 +678,7 @@ VOID MY_PLAY_DRAW(VOID)
 		DrawGraph(player.image.x, player.image.y, player.image.handle, TRUE);
 
 		//プレイヤーの当たり判定を描画(デバッグ用)
-		DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom, GetColor(255, 0, 0), FALSE);
+		//DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom, GetColor(255, 0, 0), FALSE);
 	}
 
 	return;
@@ -833,29 +722,8 @@ VOID MY_END_PROC(VOID)
 	//バックスペースキー押したら、スタートシーンへ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
-		//効果音が流れていないなら(ボタン)
-		if (CheckSoundMem(Button_SF.handle) == 0)
-		{
-			//効果音の音量を下げる
-			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
-			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
-		}
-
-		GameScene = GAME_SCENE_START;
-
-		//BGMが流れているなら(GameClear)
-		if (CheckSoundMem(Clear_BGM.handle) != 0)
-		{
-			StopSoundMem(Clear_BGM.handle);		//BGMを止める
-		}
-		//BGMが流れているなら(GameOver)
-		if (CheckSoundMem(Over_BGM.handle) != 0)
-		{
-			StopSoundMem(Over_BGM.handle);   //BGMを止める
-		}
-
-		//スコアを初期化する
-		Score = 0;
+		//スタート画面に行く際の処理
+		GOTO_START();
 	}
 
 	//マウスが範囲内にいるなら(スタート画面行き)
@@ -864,29 +732,8 @@ VOID MY_END_PROC(VOID)
 		if (mouse.Point.x > ImageBackButton.x && mouse.Point.x < (ImageBackButton.x + ImageBackButton.width)
 			&& mouse.Point.y > ImageBackButton.y && mouse.Point.y < (ImageBackButton.y + ImageBackButton.height))
 		{
-			//効果音が流れていないなら(ボタン)
-			if (CheckSoundMem(Button_SF.handle) == 0)
-			{
-				//効果音の音量を下げる
-				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
-				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
-			}
-
-			GameScene = GAME_SCENE_START;
-
-			//BGMが流れているなら(GameClear)
-			if (CheckSoundMem(Clear_BGM.handle) != 0)
-			{
-				StopSoundMem(Clear_BGM.handle);		//BGMを止める
-			}
-			//BGMが流れているなら(GameOver)
-			if (CheckSoundMem(Over_BGM.handle) != 0)
-			{
-				StopSoundMem(Over_BGM.handle);   //BGMを止める
-			}
-
-			//スコアを初期化する
-			Score = 0;
+			//スタート画面に行く際の処理
+			GOTO_START();
 		}
 	}
 
@@ -1554,6 +1401,184 @@ VOID GOTO_PLAY(VOID)
 
 		Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
 		Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
+	}
+
+	return;
+}
+
+//スタート画面に行く際の処理
+VOID GOTO_START(VOID)
+{
+	//効果音が流れていないなら(ボタン)
+	if (CheckSoundMem(Button_SF.handle) == 0)
+	{
+		//効果音の音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+		PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+	}
+
+	GameScene = GAME_SCENE_START;
+
+	//BGMが流れているなら(GameClear)
+	if (CheckSoundMem(Clear_BGM.handle) != 0)
+	{
+		StopSoundMem(Clear_BGM.handle);		//BGMを止める
+	}
+	//BGMが流れているなら(GameOver)
+	if (CheckSoundMem(Over_BGM.handle) != 0)
+	{
+		StopSoundMem(Over_BGM.handle);   //BGMを止める
+	}
+
+	//スコアを初期化する
+	Score = 0;
+
+	return;
+}
+
+//スタート画面に行く際の処理(説明画面から)
+VOID GOTO_START_EXP(VOID)
+{
+	//効果音が流れていないなら(ボタン)
+	if (CheckSoundMem(Button_SF.handle) == 0)
+	{
+		//効果音の音量を下げる
+		ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+		PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+	}
+	GameScene = GAME_SCENE_START;
+
+	return;
+}
+
+//プレイヤーの攻撃に関する関数
+VOID PLAYER_ATTACK(VOID)
+{
+	if (MY_KEY_DOWN_1SECOND(KEY_INPUT_RETURN) == TRUE)
+	{
+		//基準時間を取得する
+		DrawTime = GetNowCount();
+
+		//効果音が流れていないなら
+		if (CheckSoundMem(Mitu_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 80 / 100, Mitu_SF.handle);  //50%の音量にする
+			PlaySoundMem(Mitu_SF.handle, DX_PLAYTYPE_BACK);		   //バックグラウンド再生
+		}
+
+		Mitudesu_Ent = TRUE;	//表示
+
+		//接してるか確認
+		MY_CHECK_INFEHUMAN_PLAYER_COLL(player.coll);
+	}
+
+	return;
+}
+
+//プレイヤーの移動に関する関数
+VOID PLAYER_MOVE(VOID)
+{
+	//プレイヤーのキー操作(4方向カーソルキーで行う)
+	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
+	{
+		if (player.image.y >= 0) //画面外でないなら
+		{
+			player.image.y -= player.speed;
+			ImageMitudesu.y = player.image.y - 20;
+		}
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
+	{
+		if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
+		{
+			player.image.y += player.speed;
+			ImageMitudesu.y = player.image.y - 20;
+		}
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
+	{
+		if (player.image.x >= 0) //画面外でないなら
+		{
+			player.image.x -= player.speed;
+			ImageMitudesu.x = player.image.x + 50;
+		}
+	}
+	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
+	{
+		if (player.image.x + player.image.width <= GAME_WIDTH)
+		{
+			player.image.x += player.speed;
+			ImageMitudesu.x = player.image.x + 50;
+		}
+	}
+
+	return;
+}
+
+//ゲームクリアに関する関数
+VOID GAMECLEAR_IF(VOID)
+{
+	//経過時間が0秒になったら(・・・3,2,1 で終了させるため <=)
+	if (ElaTime <= 0)
+	{
+		GameScene = GAME_SCENE_END;	//エンドシーンへ移動する
+
+		//BGMが流れているなら
+		if (CheckSoundMem(Play_BGM.handle) != 0)
+		{
+			StopSoundMem(Play_BGM.handle);		//BGMを止める
+		}
+
+		//初期化する
+		MY_INIT();
+		Jude = JUDE_CLEAR;
+
+		return;
+	}
+
+	return;
+}
+
+//ゲームオーバーに関する関数
+VOID GAMEOVER_IF(VOID)
+{
+	for (int i = 0; i < 30; ++i)
+	{
+		//接しているなら 且つ 表示されているなら
+		if (Human_Cons[i].IsContact == TRUE && Human_Cons[i].IsDraw == TRUE)
+		{
+			//それぞれで時間を取得する
+			Human_Cons[i].NowCount = GetNowCount();
+
+			if (Human_Cons[i].Contact_First)
+			{
+				//ここでは基準時間を取得
+				Human_Cons[i].ContactTime = GetNowCount();
+				Human_Cons[i].Contact_First = FALSE;	//この処理は1回だけ
+			}
+
+			//1秒間毎にスコアが減る
+			if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) % 1000 == 0)
+				Score -= 10;
+
+			//人間同士が一定時間、接していたら
+			if ((Human_Cons[i].NowCount - Human_Cons[i].ContactTime) >= ContactTime)
+			{
+				//BGMが流れているなら
+				if (CheckSoundMem(Play_BGM.handle) != 0)
+				{
+					StopSoundMem(Play_BGM.handle);		//BGMを止める
+				}
+
+				//初期化する
+				MY_INIT();
+				Jude = JUDE_OVER;
+
+				//エンドシーンへ移動する
+				GameScene = GAME_SCENE_END;
+			}
+		}
 	}
 
 	return;

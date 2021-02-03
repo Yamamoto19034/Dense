@@ -355,4 +355,13 @@ BOOL MY_CHECK_RECT_COLL(RECT, RECT);		//領域の当たり判定をする関数
 VOID COLLPROC(VOID);						//当たり判定をする関数
 
 VOID MY_INIT(VOID);							//初期化する関数
+
 VOID GOTO_PLAY(VOID);						//プレイ画面に行く際の準備
+VOID GOTO_START(VOID);						//スタート画面に行く際の処理
+VOID GOTO_START_EXP(VOID);					//スタート画面に行く際の処理(説明画面から)
+
+VOID PLAYER_ATTACK(VOID);					//プレイヤーの攻撃に関する関数
+VOID PLAYER_MOVE(VOID);						//プレイヤーの移動に関する関数
+
+VOID GAMECLEAR_IF(VOID);					//ゲームクリアに関する関数
+VOID GAMEOVER_IF(VOID);						//ゲームオーバーに関する関数
