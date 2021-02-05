@@ -77,6 +77,7 @@
 #define MUSIC_CLEAR_BGM_PATH	 TEXT(".\\MUSIC\\Breakfast.mp3")		//GameClear時のBGM
 #define MUSIC_OVER_BGM_PATH		 TEXT(".\\MUSIC\\枯葉色.mp3")			//GameOver時のBGM
 #define SOUND_EFFECT_BUTTON_PATH TEXT(".\\MUSIC\\decision15.mp3")		//ボタンを押したときの効果音
+#define SOUND_EFFECT_INFE_PATH	 TEXT(".\\MUSIC\\poison.mp3")			//感染したときの効果音
 
 //時間関連
 #define TIMELIMIT				60 * 1000		//制限時間、60秒間
@@ -259,6 +260,7 @@ MUSIC Mitu_SF;					//「密です」(SF = Sound Effect)
 MUSIC Clear_BGM;				//GameClear時のBGM
 MUSIC Over_BGM;					//GameOver時のBGM
 MUSIC Button_SF;				//ボタンを押したときの効果音
+MUSIC Infe_SF;					//感染したときの効果音
 
 //時間関連
 int StartTime = 0;				//計測開始時間

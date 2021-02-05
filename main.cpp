@@ -1151,6 +1151,16 @@ BOOL MY_LOAD_MUSIC(VOID)
 		return FALSE;
 	}
 
+	//感染したときの効果音
+	strcpy_s(Infe_SF.path, SOUND_EFFECT_INFE_PATH);
+	Infe_SF.handle = LoadSoundMem(Infe_SF.path);
+	if (Infe_SF.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), SOUND_EFFECT_INFE_PATH, MUSIC_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -1163,7 +1173,7 @@ VOID MY_DELETE_MUSIC(VOID)
 	DeleteSoundMem(Clear_BGM.handle);
 	DeleteSoundMem(Over_BGM.handle);
 	DeleteSoundMem(Button_SF.handle);
-
+	DeleteSoundMem(Infe_SF.handle);
 	return;
 }
 
@@ -1559,6 +1569,14 @@ VOID GAMEOVER_IF(VOID)
 		{
 			//それぞれで時間を取得する
 			Human_Cons[i].NowCount = GetNowCount();
+
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Infe_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 75 / 100, Infe_SF.handle);  //50%の音量にする
+				PlaySoundMem(Infe_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
 
 			if (Human_Cons[i].Contact_First)
 			{
