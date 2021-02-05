@@ -1415,11 +1415,21 @@ VOID GOTO_PLAY(VOID)
 	//ここで描画位置を決める(一定時間で出現する用)
 	for (int i = 0; i < 30; ++i)
 	{
-		int x = GetRand(15);
-		int y = GetRand(10);
+		int x = GetRand(GAME_MAP_YOKO_MAX - 1);
+		int y = GetRand(GAME_MAP_TATE_MAX - 1);
 
-		Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
-		Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
+		//タイマーの位置には描画させない
+		if (x != GAME_MAP_YOKO_MAX - 1 || y != 0)
+		{
+			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * x;
+			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * y;
+		}
+		else 
+		{
+			//重なってしまったら1マスずらす
+			Human_Cons[i].Humanimage.x = IMAGE_HUMAN_WIDTH * (x - 1);
+			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * (y - 1);
+		}
 	}
 
 	return;
@@ -1570,11 +1580,11 @@ VOID GAMEOVER_IF(VOID)
 			//それぞれで時間を取得する
 			Human_Cons[i].NowCount = GetNowCount();
 
-			//効果音が流れていないなら(ボタン)
+			//効果音が流れていないなら(感染)
 			if (CheckSoundMem(Infe_SF.handle) == 0)
 			{
 				//効果音の音量を下げる
-				ChangeVolumeSoundMem(255 * 75 / 100, Infe_SF.handle);  //50%の音量にする
+				ChangeVolumeSoundMem(255 * 75 / 100, Infe_SF.handle);  //75%の音量にする
 				PlaySoundMem(Infe_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
 			}
 
