@@ -47,7 +47,7 @@
 #define IMAGE_BACK_BUTTON_PATH	TEXT(".\\IMAGE\\backButton.png")		//戻るを促すボタン
 #define IMAGE_EASY_BUTTON_PATH	TEXT(".\\IMAGE\\push1_easy.png")		//easyモードを促すボタン
 #define IMAGE_HARD_BUTTON_PATH	TEXT(".\\IMAGE\\push2_hard.png")		//hardモードを促すボタン
-#define IMAGE_HIGH_SCORE_PATH	TEXT(".\\IMAGE\\highscore.png")
+#define IMAGE_HIGH_SCORE_PATH	TEXT(".\\IMAGE\\highscore.png")			//ハイスコアの画像
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -245,7 +245,7 @@ IMAGE ImageExpButton;			//説明画面へ促すボタン
 IMAGE ImageBackButton;			//戻るを促すボタン
 IMAGE ImageEasyButton;			//easyモードを促すボタン
 IMAGE ImageHardButton;			//hardモードを促すボタン
-IMAGE ImageHighScore;
+IMAGE ImageHighScore;			//ハイスコアの画像
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[30];	//一定時間ごとに出現する用の人間を配列で管理
@@ -310,14 +310,13 @@ RECT mapColl[GAME_MAP_TATE_MAX][GAME_MAP_YOKO_MAX];
 int Jude;
 
 //スコア関連
-int Score = 0;
-int HighScore_Easy = -999;
-int HighScore_Hard = -999;
-BOOL PushEasyMode = FALSE;
-BOOL PushHardMode = FALSE;
-BOOL Update_EasyScore = FALSE;
-BOOL Update_HardScore = FALSE;
-
+int Score = 0;						//スコア
+int HighScore_Easy = -999;			//Easyモードのハイスコアを格納
+int HighScore_Hard = -999;			//Hardモードのハイスコアを格納
+BOOL PushEasyMode = FALSE;			//Easyモードを選択したか
+BOOL PushHardMode = FALSE;			//Hardモードを選択したか
+BOOL Update_EasyScore = FALSE;		//Easyモードのハイスコアが更新されたか
+BOOL Update_HardScore = FALSE;		//Hardモードのハイスコアが更新されたか
 
 //######プロトタイプ宣言######
 VOID MY_FPS_UPDATE(VOID);					//FPS値を計測、更新する

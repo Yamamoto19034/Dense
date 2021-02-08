@@ -777,8 +777,10 @@ VOID MY_END_DRAW(VOID)
 	//スタート画面へ促すボタン
 	DrawGraph(ImageBackButton.x, ImageBackButton.y, ImageBackButton.handle, TRUE);
 
+	//更新されたら表示
 	if (Update_EasyScore == TRUE || Update_HardScore == TRUE)
 	{
+		//ハイスコアの画像
 		DrawGraph(ImageHighScore.x, ImageHighScore.y, ImageHighScore.handle, TRUE);
 	}
 
@@ -1050,9 +1052,9 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageHardButton.x = GAME_WIDTH / 2 - ImageHardButton.width / 2;			//X位置を決める
 	ImageHardButton.y = ImageEasyButton.y + ImageEasyButton.height + 20;	//Y位置を決める
 
-	//hardモードを促すボタン
+	//ハイスコアの画像
 	strcpy_s(ImageHighScore.path, IMAGE_HIGH_SCORE_PATH);			//パスの設定
-	ImageHighScore.handle = LoadGraph(ImageHighScore.path);		//読み込み
+	ImageHighScore.handle = LoadGraph(ImageHighScore.path);			//読み込み
 	if (ImageHighScore.handle == -1)
 	{
 		//エラーメッセージ表示
@@ -1107,7 +1109,7 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageEasyButton.handle);	//easyモードを促すボタン
 	DeleteGraph(ImageHardButton.handle);	//hardモードを促すボタン
 
-	DeleteGraph(ImageHighScore.handle);
+	DeleteGraph(ImageHighScore.handle);		//ハイスコアの画像
 
 	return;
 }
@@ -1483,7 +1485,7 @@ VOID GOTO_START(VOID)
 		StopSoundMem(Over_BGM.handle);   //BGMを止める
 	}
 
-	//スコアを初期化する
+	//スコア関連を初期化する
 	Score = 0;
 	Update_EasyScore = FALSE;
 	Update_HardScore = FALSE;
@@ -1589,16 +1591,20 @@ VOID GAMECLEAR_IF(VOID)
 		MY_INIT();
 		Jude = JUDE_CLEAR;
 
+		//Easyモードを選択していたら
 		if (PushEasyMode == TRUE)
 		{
+			//ハイスコアが更新されたら
 			if (Score >= HighScore_Easy)
 			{
 				HighScore_Easy = Score;
 				Update_EasyScore = TRUE;
 			}
 		}
+		//Hardモードを選択していたら
 		else if (PushHardMode == TRUE)
 		{
+			//ハイスコアが更新されたら
 			if (Score >= HighScore_Hard)
 			{
 				HighScore_Hard = Score;
