@@ -1061,7 +1061,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageHighScore.handle, &ImageHighScore.width, &ImageHighScore.height);	//‰æ‘œ‚Ì•‚Æ‚‚³‚ğæ“¾
 	ImageHighScore.x = GAME_WIDTH / 2 - ImageHighScore.width / 2;			//XˆÊ’u‚ğŒˆ‚ß‚é
-	ImageHighScore.y = 0;		//YˆÊ’u‚ğŒˆ‚ß‚é
+	ImageHighScore.y = ImageClear.y + ImageClear.height + 90;				//YˆÊ’u‚ğŒˆ‚ß‚é
 
 	return TRUE;
 }
