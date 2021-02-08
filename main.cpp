@@ -354,6 +354,7 @@ VOID MY_START_PROC(VOID)
 		GOTO_PLAY();
 		ContactTime = EASY_CONTACT_TIME;
 		AppeTime = EASY_APPE_TIME;
+		PushEasyMode = TRUE;
 	}
 	//2キーを押したら、プレイシーン(Hardモード)へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_2) == TRUE)
@@ -362,6 +363,7 @@ VOID MY_START_PROC(VOID)
 		GOTO_PLAY();
 		ContactTime = HARD_CONTACT_TIME;
 		AppeTime = HARD_APPE_TIME;
+		PushHardMode = TRUE;
 	}
 
 	//シフトキー(左 or 右)を押したら、説明画面に移動する
@@ -396,6 +398,7 @@ VOID MY_START_PROC(VOID)
 			GOTO_PLAY();
 			ContactTime = EASY_CONTACT_TIME;
 			AppeTime = EASY_APPE_TIME;
+			PushEasyMode = TRUE;
 		}
 
 		//マウスが範囲内にいるなら(Hardモード)
@@ -413,6 +416,7 @@ VOID MY_START_PROC(VOID)
 			GOTO_PLAY();
 			ContactTime = HARD_CONTACT_TIME;
 			AppeTime = HARD_APPE_TIME;
+			PushHardMode = TRUE;
 		}
 
 		//マウスが範囲内にいるなら(説明画面行き)
@@ -773,6 +777,11 @@ VOID MY_END_DRAW(VOID)
 	//スタート画面へ促すボタン
 	DrawGraph(ImageBackButton.x, ImageBackButton.y, ImageBackButton.handle, TRUE);
 
+	if (Update_EasyScore == TRUE || Update_HardScore == TRUE)
+	{
+		DrawGraph(ImageHighScore.x, ImageHighScore.y, ImageHighScore.handle, TRUE);
+	}
+
 	return;
 }
 
@@ -948,7 +957,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageClear.handle, &ImageClear.width, &ImageClear.height);	//画像の幅と高さを取得
 	ImageClear.x = GAME_WIDTH / 2 - ImageClear.width / 2;			//X位置を決める
-	ImageClear.y = GAME_HEIGHT / 2 - ImageClear.height / 2;			//Y位置を決める
+	ImageClear.y = GAME_HEIGHT / 2 - ImageClear.height / 2 - 30;			//Y位置を決める
 
 	//ゲームオーバーロゴ
 	strcpy_s(ImageOver.path, IMAGE_OVER_PATH);			//パスの設定
@@ -961,7 +970,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	}
 	GetGraphSize(ImageOver.handle, &ImageOver.width, &ImageOver.height);	//画像の幅と高さを取得
 	ImageOver.x = GAME_WIDTH / 2 - ImageOver.width / 2;				//X位置を決める
-	ImageOver.y = GAME_HEIGHT / 2 - ImageOver.height / 2;			//Y位置を決める
+	ImageOver.y = GAME_HEIGHT / 2 - ImageOver.height / 2 - 30;			//Y位置を決める
 
 	//ゲーム説明画像
 	strcpy_s(ImageGameExp.path, IMAGE_GAME_EXP_PATH);			//パスの設定
@@ -1041,6 +1050,19 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageHardButton.x = GAME_WIDTH / 2 - ImageHardButton.width / 2;			//X位置を決める
 	ImageHardButton.y = ImageEasyButton.y + ImageEasyButton.height + 20;	//Y位置を決める
 
+	//hardモードを促すボタン
+	strcpy_s(ImageHighScore.path, IMAGE_HIGH_SCORE_PATH);			//パスの設定
+	ImageHighScore.handle = LoadGraph(ImageHighScore.path);		//読み込み
+	if (ImageHighScore.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_HIGH_SCORE_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageHighScore.handle, &ImageHighScore.width, &ImageHighScore.height);	//画像の幅と高さを取得
+	ImageHighScore.x = GAME_WIDTH / 2 - ImageHighScore.width / 2;			//X位置を決める
+	ImageHighScore.y = 0;		//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1084,6 +1106,8 @@ VOID MY_DELETE_IMAGE(VOID)
 
 	DeleteGraph(ImageEasyButton.handle);	//easyモードを促すボタン
 	DeleteGraph(ImageHardButton.handle);	//hardモードを促すボタン
+
+	DeleteGraph(ImageHighScore.handle);
 
 	return;
 }
@@ -1461,6 +1485,8 @@ VOID GOTO_START(VOID)
 
 	//スコアを初期化する
 	Score = 0;
+	Update_EasyScore = FALSE;
+	Update_HardScore = FALSE;
 
 	return;
 }
@@ -1562,6 +1588,23 @@ VOID GAMECLEAR_IF(VOID)
 		//初期化する
 		MY_INIT();
 		Jude = JUDE_CLEAR;
+
+		if (PushEasyMode == TRUE)
+		{
+			if (Score >= HighScore_Easy)
+			{
+				HighScore_Easy = Score;
+				Update_EasyScore = TRUE;
+			}
+		}
+		else if (PushHardMode == TRUE)
+		{
+			if (Score >= HighScore_Hard)
+			{
+				HighScore_Hard = Score;
+				Update_HardScore = TRUE;
+			}
+		}
 
 		return;
 	}
