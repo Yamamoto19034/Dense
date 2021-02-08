@@ -350,20 +350,14 @@ VOID MY_START_PROC(VOID)
 	//1キーを押したら、プレイシーン(Easyモード)へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_1) == TRUE)
 	{
-		//プレイ画面に向けて準備
-		GOTO_PLAY();
-		ContactTime = EASY_CONTACT_TIME;
-		AppeTime = EASY_APPE_TIME;
-		PushEasyMode = TRUE;
+		//Easyモードに行く際の処理
+		GOTO_EASY_MODE();
 	}
 	//2キーを押したら、プレイシーン(Hardモード)へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_2) == TRUE)
 	{
-		//プレイ画面に向けて準備
-		GOTO_PLAY();
-		ContactTime = HARD_CONTACT_TIME;
-		AppeTime = HARD_APPE_TIME;
-		PushHardMode = TRUE;
+		//Hardモードへ行く際の処理
+		GOTO_HARD_MODE();
 	}
 
 	//シフトキー(左 or 右)を押したら、説明画面に移動する
@@ -394,11 +388,9 @@ VOID MY_START_PROC(VOID)
 				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
 				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
 			}
-			//プレイ画面に向けて準備
-			GOTO_PLAY();
-			ContactTime = EASY_CONTACT_TIME;
-			AppeTime = EASY_APPE_TIME;
-			PushEasyMode = TRUE;
+
+			//Easyモードへ行く際の処理
+			GOTO_EASY_MODE();
 		}
 
 		//マウスが範囲内にいるなら(Hardモード)
@@ -412,11 +404,9 @@ VOID MY_START_PROC(VOID)
 				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
 				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
 			}
-			//プレイ画面に向けて準備
-			GOTO_PLAY();
-			ContactTime = HARD_CONTACT_TIME;
-			AppeTime = HARD_APPE_TIME;
-			PushHardMode = TRUE;
+			
+			//Hardモードへ行く際の処理
+			GOTO_HARD_MODE();
 		}
 
 		//マウスが範囲内にいるなら(説明画面行き)
@@ -1457,6 +1447,30 @@ VOID GOTO_PLAY(VOID)
 			Human_Cons[i].Humanimage.y = IMAGE_HUMAN_HEIGHT * (y - 1);
 		}
 	}
+
+	return;
+}
+
+//Easyモードへ行く際の処理
+VOID GOTO_EASY_MODE(VOID)
+{
+	//プレイ画面に向けて準備
+	GOTO_PLAY();
+	ContactTime = EASY_CONTACT_TIME;
+	AppeTime = EASY_APPE_TIME;
+	PushEasyMode = TRUE;
+
+	return;
+}
+
+//Hardモードへ行く際の処理
+VOID GOTO_HARD_MODE(VOID)
+{
+	//プレイ画面に向けて準備
+	GOTO_PLAY();
+	ContactTime = HARD_CONTACT_TIME;
+	AppeTime = HARD_APPE_TIME;
+	PushHardMode = TRUE;
 
 	return;
 }

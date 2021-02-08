@@ -367,6 +367,8 @@ VOID COLLPROC(VOID);						//当たり判定をする関数
 VOID MY_INIT(VOID);							//初期化する関数
 
 VOID GOTO_PLAY(VOID);						//プレイ画面に行く際の準備
+VOID GOTO_EASY_MODE(VOID);					//Easyモードへ行く際の準備
+VOID GOTO_HARD_MODE(VOID);					//Hardモードへ行く際の準備
 VOID GOTO_START(VOID);						//スタート画面に行く際の処理
 VOID GOTO_START_EXP(VOID);					//スタート画面に行く際の処理(説明画面から)
 
