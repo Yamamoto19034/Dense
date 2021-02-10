@@ -87,7 +87,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		case GAME_SCENE_EXP:		//説明画面
 			MY_EXP();
 			break;
-		case GAME_SCENE_KEY:
+		case GAME_SCENE_KEY:		//キー操作説明画面
 			MY_KEY_EXP();
 			break;
 		}
@@ -465,9 +465,13 @@ VOID MY_START_DRAW(VOID)
 	DrawGraph(ImageBG.x, ImageBG.y, ImageBG.handle, TRUE);
 	DrawGraph(ImageTitle.x, ImageTitle.y, ImageTitle.handle, TRUE);
 	//DrawGraph(ImagePushEnter.x, ImagePushEnter.y, ImagePushEnter.handle, TRUE);
+
+	//Easy・Hardモードへ促すボタンを描画
 	DrawGraph(ImageEasyButton.x, ImageEasyButton.y, ImageEasyButton.handle, TRUE);
 	DrawGraph(ImageHardButton.x, ImageHardButton.y, ImageHardButton.handle, TRUE);
 	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
+
+	//操作説明・キー操作説明へ促すボタンを描画
 	DrawGraph(ImageExpButton.x, ImageExpButton.y, ImageExpButton.handle, TRUE);
 	DrawGraph(ImageKeyButton.x, ImageKeyButton.y, ImageKeyButton.handle, TRUE);
 
@@ -514,6 +518,7 @@ VOID MY_EXP_DRAW(VOID)
 	return;
 }
 
+//キー操作説明画面
 VOID MY_KEY_EXP(VOID)
 {
 	MY_KEY_EXP_PROC();
@@ -522,12 +527,13 @@ VOID MY_KEY_EXP(VOID)
 	return;
 }
 
+//キー操作説明画面の処理
 VOID MY_KEY_EXP_PROC(VOID)
 {
 	//バックスペースキーでスタート画面に戻る
 	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
 	{
-		//スタート画面に行く際の処理(説明画面から)
+		//スタート画面に行く際の処理(キー説明画面から)
 		GOTO_START_EXP();
 	}
 
@@ -536,7 +542,7 @@ VOID MY_KEY_EXP_PROC(VOID)
 	{
 		if (mouse.Point.x > 55 && mouse.Point.x < 187 && mouse.Point.y > 33 && mouse.Point.y < 165)
 		{
-			//スタート画面に行く際の処理(説明画面から)
+			//スタート画面に行く際の処理(キー説明画面から)
 			GOTO_START_EXP();
 		}
 	}
@@ -544,6 +550,7 @@ VOID MY_KEY_EXP_PROC(VOID)
 	return;
 }
 
+//キー操作説明画面の描画
 VOID MY_KEY_EXP_DRAW(VOID)
 {
 	DrawGraph(ImageKeyExp.x, ImageKeyExp.y, ImageKeyExp.handle, TRUE);
@@ -1125,7 +1132,7 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageHighScore.y = ImageClear.y + ImageClear.height + 90;				//Y位置を決める
 
 	//キー説明画像
-	strcpy_s(ImageKeyExp.path, IMAGE_KEY_EXP_PATH);			//パスの設定
+	strcpy_s(ImageKeyExp.path, IMAGE_KEY_EXP_PATH);				//パスの設定
 	ImageKeyExp.handle = LoadGraph(ImageKeyExp.path);			//読み込み
 	if (ImageKeyExp.handle == -1)
 	{
@@ -1196,8 +1203,8 @@ VOID MY_DELETE_IMAGE(VOID)
 
 	DeleteGraph(ImageHighScore.handle);		//ハイスコアの画像
 
-	DeleteGraph(ImageKeyExp.handle);
-	DeleteGraph(ImageKeyButton.handle);
+	DeleteGraph(ImageKeyExp.handle);		//キー説明画像
+	DeleteGraph(ImageKeyButton.handle);		//キー説明画面へ促すボタン
 
 	return;
 }
