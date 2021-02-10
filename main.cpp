@@ -1550,8 +1550,8 @@ VOID PLAYER_ATTACK(VOID)
 //プレイヤーの移動に関する関数
 VOID PLAYER_MOVE(VOID)
 {
-	//プレイヤーのキー操作(4方向カーソルキーで行う)
-	if (MY_KEY_DOWN(KEY_INPUT_UP) == TRUE)	  //上カーソルキー
+	//プレイヤーのキー操作(4方向カーソルキー 又は WASDキーで行う)
+	if ((MY_KEY_DOWN(KEY_INPUT_UP) == TRUE) || (MY_KEY_DOWN(KEY_INPUT_W) == TRUE))	  //上カーソルキー 又は Wキー
 	{
 		if (player.image.y >= 0) //画面外でないなら
 		{
@@ -1559,7 +1559,7 @@ VOID PLAYER_MOVE(VOID)
 			ImageMitudesu.y = player.image.y - 20;
 		}
 	}
-	if (MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE)  //下カーソルキー
+	if ((MY_KEY_DOWN(KEY_INPUT_DOWN) == TRUE) || (MY_KEY_DOWN(KEY_INPUT_S) == TRUE))  //下カーソルキー 又は Sキー
 	{
 		if (player.image.y + player.image.height <= GAME_HEIGHT) //画面外でないなら
 		{
@@ -1567,7 +1567,7 @@ VOID PLAYER_MOVE(VOID)
 			ImageMitudesu.y = player.image.y - 20;
 		}
 	}
-	if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)  //左カーソルキー
+	if ((MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE) || (MY_KEY_DOWN(KEY_INPUT_A) == TRUE))  //左カーソルキー 又は Aキー
 	{
 		if (player.image.x >= 0) //画面外でないなら
 		{
@@ -1575,7 +1575,7 @@ VOID PLAYER_MOVE(VOID)
 			ImageMitudesu.x = player.image.x + 50;
 		}
 	}
-	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) //右カーソルキー
+	if ((MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE) || (MY_KEY_DOWN(KEY_INPUT_D) == TRUE)) //右カーソルキー 又は Dキー
 	{
 		if (player.image.x + player.image.width <= GAME_WIDTH)
 		{
