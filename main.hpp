@@ -48,6 +48,8 @@
 #define IMAGE_EASY_BUTTON_PATH	TEXT(".\\IMAGE\\push1_easy.png")		//easyモードを促すボタン
 #define IMAGE_HARD_BUTTON_PATH	TEXT(".\\IMAGE\\push2_hard.png")		//hardモードを促すボタン
 #define IMAGE_HIGH_SCORE_PATH	TEXT(".\\IMAGE\\highscore.png")			//ハイスコアの画像
+#define IMAGE_KEY_EXP_PATH		TEXT(".\\IMAGE\\Key_Exp.png")
+#define IMAGE_KEY_BUTTON_PATH	TEXT(".\\IMAGE\\keyButton.png")
 
 //マップチップ関連
 #define GAME_MAP_TATE_MAX		11  //マップの縦の数
@@ -101,6 +103,7 @@ enum GAME_SCENE {
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
 	GAME_SCENE_EXP,
+	GAME_SCENE_KEY,
 };  //ゲームのシーン
 
 enum CHARA_SPEED {
@@ -246,6 +249,8 @@ IMAGE ImageBackButton;			//戻るを促すボタン
 IMAGE ImageEasyButton;			//easyモードを促すボタン
 IMAGE ImageHardButton;			//hardモードを促すボタン
 IMAGE ImageHighScore;			//ハイスコアの画像
+IMAGE ImageKeyExp;
+IMAGE ImageKeyButton;
 
 HUMAN IMAGEHuman[5];			//スタート時に最初の人間を描画(5人から)
 HUMAN_CONSTANT Human_Cons[30];	//一定時間ごとに出現する用の人間を配列で管理
@@ -342,6 +347,10 @@ VOID MY_START_DRAW(VOID);					//スタート画面の描画
 VOID MY_EXP(VOID);							//説明画面
 VOID MY_EXP_PROC(VOID);						//説明画面の処理
 VOID MY_EXP_DRAW(VOID);						//説明画面の描画
+
+VOID MY_KEY_EXP(VOID);
+VOID MY_KEY_EXP_PROC(VOID);
+VOID MY_KEY_EXP_DRAW(VOID);
 
 VOID MY_PLAY(VOID);							//プレイ画面
 VOID MY_PLAY_PROC(VOID);					//プレイ画面の処理

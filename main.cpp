@@ -87,6 +87,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		case GAME_SCENE_EXP:		//説明画面
 			MY_EXP();
 			break;
+		case GAME_SCENE_KEY:
+			MY_KEY_EXP();
+			break;
 		}
 
 		MY_FPS_DRAW();							//FPSの処理(描画)
@@ -374,6 +377,20 @@ VOID MY_START_PROC(VOID)
 		GameScene = GAME_SCENE_EXP;
 	}
 
+	//コントロールキー(左 or 右)を押したら、キー説明画面に移動する
+	if (MY_KEY_DOWN(KEY_INPUT_LCONTROL) || MY_KEY_DOWN(KEY_INPUT_RCONTROL) == TRUE)
+	{
+		//効果音が流れていないなら(ボタン)
+		if (CheckSoundMem(Button_SF.handle) == 0)
+		{
+			//効果音の音量を下げる
+			ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+			PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+		}
+
+		GameScene = GAME_SCENE_KEY;
+	}
+
 	//マウスの左ボタンをクリックしたとき
 	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
 	{
@@ -422,6 +439,20 @@ VOID MY_START_PROC(VOID)
 			}
 			GameScene = GAME_SCENE_EXP;
 		}
+
+		//マウスが範囲内にいるなら(キー説明画面行き)
+		if (mouse.Point.x > ImageKeyButton.x && mouse.Point.x < (ImageKeyButton.x + ImageKeyButton.width)
+			&& mouse.Point.y > ImageKeyButton.y && mouse.Point.y < (ImageKeyButton.y + ImageKeyButton.height))
+		{
+			//効果音が流れていないなら(ボタン)
+			if (CheckSoundMem(Button_SF.handle) == 0)
+			{
+				//効果音の音量を下げる
+				ChangeVolumeSoundMem(255 * 50 / 100, Button_SF.handle);  //50%の音量にする
+				PlaySoundMem(Button_SF.handle, DX_PLAYTYPE_BACK);		 //バックグラウンド再生
+			}
+			GameScene = GAME_SCENE_KEY;
+		}
 	}
 
 	return;
@@ -438,6 +469,7 @@ VOID MY_START_DRAW(VOID)
 	DrawGraph(ImageHardButton.x, ImageHardButton.y, ImageHardButton.handle, TRUE);
 	//DrawString(0, 0, "スタート画面(エンターキーを押してください)", GetColor(255, 255, 255));
 	DrawGraph(ImageExpButton.x, ImageExpButton.y, ImageExpButton.handle, TRUE);
+	DrawGraph(ImageKeyButton.x, ImageKeyButton.y, ImageKeyButton.handle, TRUE);
 
 	return;
 }
@@ -478,6 +510,43 @@ VOID MY_EXP_PROC(VOID)
 VOID MY_EXP_DRAW(VOID)
 {
 	DrawGraph(ImageGameExp.x, ImageGameExp.y, ImageGameExp.handle, TRUE);
+
+	return;
+}
+
+VOID MY_KEY_EXP(VOID)
+{
+	MY_KEY_EXP_PROC();
+	MY_KEY_EXP_DRAW();
+
+	return;
+}
+
+VOID MY_KEY_EXP_PROC(VOID)
+{
+	//バックスペースキーでスタート画面に戻る
+	if (MY_KEY_DOWN(KEY_INPUT_BACK) == TRUE)
+	{
+		//スタート画面に行く際の処理(説明画面から)
+		GOTO_START_EXP();
+	}
+
+	//マウスが範囲内にいるなら(スタート画面行き)
+	if (MY_MOUSE_DOWN(MOUSE_INPUT_LEFT) == TRUE)
+	{
+		if (mouse.Point.x > 55 && mouse.Point.x < 187 && mouse.Point.y > 33 && mouse.Point.y < 165)
+		{
+			//スタート画面に行く際の処理(説明画面から)
+			GOTO_START_EXP();
+		}
+	}
+
+	return;
+}
+
+VOID MY_KEY_EXP_DRAW(VOID)
+{
+	DrawGraph(ImageKeyExp.x, ImageKeyExp.y, ImageKeyExp.handle, TRUE);
 
 	return;
 }
@@ -1055,6 +1124,32 @@ BOOL MY_LOAD_IMAGE(VOID)
 	ImageHighScore.x = GAME_WIDTH / 2 - ImageHighScore.width / 2;			//X位置を決める
 	ImageHighScore.y = ImageClear.y + ImageClear.height + 90;				//Y位置を決める
 
+	//キー説明画像
+	strcpy_s(ImageKeyExp.path, IMAGE_KEY_EXP_PATH);			//パスの設定
+	ImageKeyExp.handle = LoadGraph(ImageKeyExp.path);			//読み込み
+	if (ImageKeyExp.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_KEY_EXP_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageKeyExp.handle, &ImageKeyExp.width, &ImageKeyExp.height);	//画像の幅と高さを取得
+	ImageKeyExp.x = GAME_WIDTH / 2 - ImageKeyExp.width / 2;					//X位置を決める
+	ImageKeyExp.y = GAME_HEIGHT / 2 - ImageKeyExp.height / 2;				//Y位置を決める
+
+	//キー説明画面へ促すボタン
+	strcpy_s(ImageKeyButton.path, IMAGE_KEY_BUTTON_PATH);			//パスの設定
+	ImageKeyButton.handle = LoadGraph(ImageKeyButton.path);			//読み込み
+	if (ImageKeyButton.handle == -1)
+	{
+		//エラーメッセージ表示
+		MessageBox(GetMainWindowHandle(), IMAGE_KEY_BUTTON_PATH, IMAGE_LOAD_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+	GetGraphSize(ImageKeyButton.handle, &ImageKeyButton.width, &ImageKeyButton.height);	//画像の幅と高さを取得
+	ImageKeyButton.x = 20;													//X位置を決める
+	ImageKeyButton.y = GAME_HEIGHT - ImageKeyButton.height - 20;			//Y位置を決める
+
 	return TRUE;
 }
 
@@ -1100,6 +1195,9 @@ VOID MY_DELETE_IMAGE(VOID)
 	DeleteGraph(ImageHardButton.handle);	//hardモードを促すボタン
 
 	DeleteGraph(ImageHighScore.handle);		//ハイスコアの画像
+
+	DeleteGraph(ImageKeyExp.handle);
+	DeleteGraph(ImageKeyButton.handle);
 
 	return;
 }
