@@ -9,7 +9,7 @@
 #define GAME_COLOR				32		//画面のカラービット
 
 #define GAME_WINDOW_BAR			0	//タイトルバーはデフォルトにする
-#define GAME_WINDOW_NAME		"密です！ 密を防げ！"	//ウィンドウのタイトル
+#define GAME_WINDOW_NAME		"密です！ 密接を防げ！"	//ウィンドウのタイトル
 
 #define GAME_FPS				60  //FPSの数値
 
